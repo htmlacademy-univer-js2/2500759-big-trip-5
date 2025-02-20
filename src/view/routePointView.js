@@ -40,7 +40,7 @@ function createRoutePointTemplate() {
             </li>`;
 }
 
-export default class routePoint {
+export default class RoutePoint {
   getTemplate() {
     return createRoutePointTemplate();
   }
