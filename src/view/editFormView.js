@@ -148,7 +148,7 @@ function createEditFormTemplate() {
               </form>`;
 }
 
-export default class editForm {
+export default class EditForm {
   getTemplate() {
     return createEditFormTemplate();
   }

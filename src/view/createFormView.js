@@ -113,7 +113,7 @@ function createCreateFormTemplate() {
               </form>`;
 }
 
-export default class createForm {
+export default class CreateForm {
   getTemplate() {
     return createCreateFormTemplate();
   }
