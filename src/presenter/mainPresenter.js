@@ -3,7 +3,7 @@ import EditForm from '../view/editFormView.js';
 import RoutePoint from '../view/routePointView.js';
 import { render, RenderPosition } from '../render.js';
 
-class MainPresenter {
+export default class MainPresenter {
 
   constructor({ container }) {
     this.container = container;
@@ -17,5 +17,3 @@ class MainPresenter {
     }
   }
 }
-
-export {MainPresenter};
