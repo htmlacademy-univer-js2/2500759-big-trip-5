@@ -41,5 +41,9 @@
   "bugs": {
     "url": "https://github.com/p1umpe/2500759-big-trip-5/issues"
   },
-  "homepage": "https://github.com/p1umpe/2500759-big-trip-5#readme"
+  "homepage": "https://github.com/p1umpe/2500759-big-trip-5#readme",
+  "dependencies": {
+    "dayjs": "^1.11.13",
+    "dayjs-plugin-utc": "^0.1.2"
+  }
 }
