@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view';
 import { DATE_FORMAT } from '../const.js';
 import { formateDate } from '../utils.js';
 
@@ -70,7 +70,7 @@ function createEditFormTemplate(point, destinations, offers) {
 
                   <div class="event__field-group  event__field-group--destination">
                     <label class="event__label  event__type-output" for="event-destination-1">
-                    ${type}
+                      ${type}
                     </label>
                     <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${pointDestination.name}" list="destination-list-1">
                     <datalist id="destination-list-1">
@@ -97,7 +97,10 @@ function createEditFormTemplate(point, destinations, offers) {
                   </div>
 
                   <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-                  <button class="event__reset-btn" type="reset">Cancel</button>
+                  <button class="event__reset-btn" type="reset">Delete</button>
+                  <button class="event__rollup-btn" type="button">
+                    <span class="visually-hidden">Open event</span>
+                  </button>
                 </header>
                 <section class="event__details">
                   <section class="event__section  event__section--offers">
@@ -114,6 +117,7 @@ function createEditFormTemplate(point, destinations, offers) {
                       </div>`)}
                     </div>
                   </section>
+
                   <section class="event__section  event__section--destination">
                     <h3 class="event__section-title  event__section-title--destination">Destination</h3>
                     <p class="event__destination-description">${pointDestination.description}</p>
@@ -122,25 +126,24 @@ function createEditFormTemplate(point, destinations, offers) {
               </form>`;
 }
 
-export default class editForm {
-  constructor(point, destinations, offers) {
-    this.point = point;
-    this.destinations = destinations;
-    this.offers = offers;
+export default class editForm extends AbstractView {
+  #point;
+  #destinations;
+  #offers;
+  #handleSubmit;
+
+  constructor(point, destinations, offers, handleSubmit) {
+    super();
+    this.#point = point;
+    this.#destinations = destinations;
+    this.#offers = offers;
+    this.#handleSubmit = handleSubmit;
+
+    this.element.addEventListener('submit', this.#handleSubmit);
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#handleSubmit);
   }
 
-  getTemplate() {
-    return createEditFormTemplate(this.point, this.destinations, this.offers);
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
+  get template() {
+    return createEditFormTemplate(this.#point, this.#destinations, this.#offers);
   }
 }
