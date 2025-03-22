@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view';
 import { formateDate, getDuration } from '../utils.js';
 import { DATE_FORMAT } from '../const.js';
 
@@ -9,16 +9,16 @@ function createRoutePointTemplate(point, destinations, offers) {
 
   return `<li class="trip-events__item">
               <div class="event">
-                <time class="event__date" datetime=${formateDate(dateFrom, DATE_FORMAT['full-date'])}">${formateDate(dateFrom, DATE_FORMAT['month-day'])}>MAR 18</time>
+                <time class="event__date" datetime="${formateDate(dateFrom, DATE_FORMAT['full-date'])}">${formateDate(dateFrom, DATE_FORMAT['month-day'])}</time>
                 <div class="event__type">
-                  <img class="event__type-icon" width="42" height="42" src="img/icons/${type}" alt="Event type icon">
+                  <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
                 </div>
                 <h3 class="event__title">${type} ${pointDestination.name}</h3>
                 <div class="event__schedule">
                   <p class="event__time">
-                    <time class="event__start-time" datetime="${formateDate(dateFrom, DATE_FORMAT['full-date-and-time'])}">${formateDate(dateFrom, DATE_FORMAT['hours-minutes'])}>10:30</time>
+                    <time class="event__start-time" datetime="${formateDate(dateFrom, DATE_FORMAT['full-date-and-time'])}">${formateDate(dateFrom, DATE_FORMAT['hours-minutes'])}</time>
                     &mdash;
-                    <time class="event__end-time" datetime="${formateDate(dateTo, DATE_FORMAT['full-date-and-time'])}">${formateDate(dateTo, DATE_FORMAT['hours-minutes'])}>11:00</time>
+                    <time class="event__end-time" datetime="${formateDate(dateTo, DATE_FORMAT['full-date-and-time'])}">${formateDate(dateTo, DATE_FORMAT['hours-minutes'])}</time>
                   </p>
                   <p class="event__duration">${getDuration(dateFrom, dateTo)}</p>
                 </div>
@@ -28,10 +28,10 @@ function createRoutePointTemplate(point, destinations, offers) {
                 <h4 class="visually-hidden">Offers:</h4>
                 <ul class="event__selected-offers">
                   ${pointOffers.map((offer) => `<li class="event__offer">
-                    <span class="event__offer-title">${offer.title}</span>
-                    &plus;&euro;&nbsp;
-                    <span class="event__offer-price">${offer.price}</span>
-                  </li>`).join('')}
+                      <span class="event__offer-title">${offer.title}</span>
+                      &plus;&euro;&nbsp;
+                      <span class="event__offer-price">${offer.price}</span>
+                    </li>`).join('')}
                 </ul>
                 <button class="event__favorite-btn ${isFavorite ? 'event__favorite-btn--active' : ''}" type="button">
                   <span class="visually-hidden">Add to favorite</span>
@@ -46,25 +46,23 @@ function createRoutePointTemplate(point, destinations, offers) {
             </li>`;
 }
 
-export default class routePoint {
-  constructor(point, destinations, offers) {
-    this.point = point;
-    this.destinations = destinations;
-    this.offers = offers;
+export default class routePoint extends AbstractView {
+  #point;
+  #destinations;
+  #offers;
+  #handleSubmit;
+
+  constructor(point, destinations, offers, handleSubmit) {
+    super();
+    this.#point = point;
+    this.#destinations = destinations;
+    this.#offers = offers;
+    this.#handleSubmit = handleSubmit;
+
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#handleSubmit);
   }
 
-  getTemplate() {
-    return createRoutePointTemplate(this.point, this.destinations, this.offers);
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
+  get template() {
+    return createRoutePointTemplate(this.#point, this.#destinations, this.#offers);
   }
 }

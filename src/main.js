@@ -1,5 +1,5 @@
-import MainPresenter from '../src/presenter/mainPresenter.js';
-import { render } from './render.js';
+import Presenter from '../src/presenter/mainPresenter.js';
+import { render, RenderPosition } from './framework/render.js';
 import Sort from './view/sortView.js';
 import Filter from './view/filterView.js';
 import TripInfo from './view/infoView.js';
@@ -19,10 +19,10 @@ pointsModel.init();
 destinationsModel.init();
 offersModel.init();
 
-render(new TripInfo(), tripMainContainer, 'afterbegin');
+render(new TripInfo(), tripMainContainer, RenderPosition.AFTERBEGIN);
 render(new Filter(), filtersContainer);
 render(new Sort(), eventsContainer);
 
-const boardPresenter = new MainPresenter({container: eventsContainer, pointsModel, destinationsModel, offersModel});
+const boardPresenter = new Presenter({container: eventsContainer, pointsModel, destinationsModel, offersModel});
 
 boardPresenter.init();
