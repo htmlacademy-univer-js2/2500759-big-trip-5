@@ -76,4 +76,9 @@ export default class PointsPresenter {
     pointPresenter.init(point);
     this.#pointPresenter.set(point.id, pointPresenter);
   }
+
+  destroy() {
+    this.#pointPresenter.forEach((presenter) => presenter.destroy());
+    this.#pointPresenter.clear();
+  }
 }

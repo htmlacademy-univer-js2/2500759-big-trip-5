@@ -1,9 +1,12 @@
-import { pointFuture, pointPast, pointPresent } from './utils';
+import { pointPast, pointFuture, pointPresent } from './point-filters';
+
+export const EVENT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
 
 export const Mode = {
   DEFAULT: 'DEFAULT',
   EDITING: 'EDITING',
 };
+
 
 export const POINT_TYPE = ['taxi', 'bus', 'ship', 'train', 'flight', 'drive', 'check-in', 'sightseeing', 'restaurant'];
 export const DATE_FORMAT = {
@@ -26,4 +29,12 @@ export const FILTER_GENERATOR = {
   [FILTER_TYPES.PAST]: (points) => points.filter((point) => pointPast(point)),
   [FILTER_TYPES.PRESENT]: (points) => points.filter((point) => pointPresent(point)),
   [FILTER_TYPES.FUTURE]: (points) => points.filter((point) => pointFuture(point)),
+};
+
+export const SortTypes = {
+  DAY: 'day',
+  EVENT: 'event',
+  TIME: 'time',
+  PRICE: 'price',
+  OFFER: 'offer'
 };

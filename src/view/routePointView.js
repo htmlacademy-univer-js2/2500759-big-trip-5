@@ -61,12 +61,23 @@ export default class routePoint extends AbstractView {
     this.#onEditClick = onEditClick;
     this.#handleFavoriteBtnClick = onFavoriteClick;
 
-    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#editClickHandler);
-    this.element.querySelector('.event__favorite-btn').addEventListener('click', this.#favoriteClickHandler);
+    this.#addEventListeners();
   }
 
   get template() {
     return createRoutePointTemplate(this.#point, this.#destinations, this.#offers);
+  }
+
+  #addEventListeners() {
+    const editButton = this.element.querySelector('.event__rollup-btn');
+    const favoriteButton = this.element.querySelector('.event__favorite-btn');
+
+    if (editButton) {
+      editButton.addEventListener('click', this.#editClickHandler);
+    }
+    if (favoriteButton) {
+      favoriteButton.addEventListener('click', this.#favoriteClickHandler);
+    }
   }
 
   #editClickHandler = (evt) => {
@@ -78,4 +89,16 @@ export default class routePoint extends AbstractView {
     evt.preventDefault();
     this.#handleFavoriteBtnClick();
   };
+
+  removeEventListeners() {
+    const editButton = this.element.querySelector('.event__rollup-btn');
+    const favoriteButton = this.element.querySelector('.event__favorite-btn');
+
+    if (editButton) {
+      editButton.removeEventListener('click', this.#editClickHandler);
+    }
+    if (favoriteButton) {
+      favoriteButton.removeEventListener('click', this.#favoriteClickHandler);
+    }
+  }
 }
