@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import objectSupport from 'dayjs/plugin/objectSupport';
+import { SortTypes } from './const';
+
 
 dayjs.extend(utc);
 dayjs.extend(objectSupport);
@@ -22,11 +24,15 @@ const getDuration = (dateFrom, dateTo) => {
   }
 };
 
-const pointPast = (point) => dayjs().isAfter(dayjs(point.dateTo));
-const pointFuture = (point) => dayjs().isBefore(dayjs(point.dateFrom));
-const pointPresent = (point) => dayjs().isAfter(dayjs(point.dateFrom)) && dayjs().isBefore(dayjs(point.dateTo));
 
 const updateItem = (items, update) => items.map((item) => item.id === update.id ? update : item);
 const isEscapeKey = (evt) => evt.key === 'Escape';
 
-export {formateDate, getDuration, pointFuture, pointPast, pointPresent, updateItem, isEscapeKey};
+const sort = {
+  [SortTypes.DAY]: (points) => points.sort((a, b) => dayjs(a.dateFrom).diff(dayjs(b.dateFrom))),
+  [SortTypes.PRICE]: (points) => points.sort((a, b) => b.price - a.price),
+  [SortTypes.TIME]: (points) => points.sort((a, b) => dayjs(b.dateTo).diff(dayjs(b.dateFrom)) - dayjs(a.dateTo).diff(dayjs(a.dateFrom))
+  )
+};
+
+export {formateDate, getDuration, updateItem, isEscapeKey, sort};

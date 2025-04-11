@@ -38,20 +38,15 @@ export default class PointPresenter {
       point: this.#point,
       destinations: this.#destinations,
       offers: this.#offers,
-      onEditClick: () => {
-        this.#replacePoint();
-        document.addEventListener('keydown', this.#onEscKeyDownClose);
-      },
+      onEditClick: this.#editBtnClickHandler,
       onFavoriteClick: this.#handleFavoriteClick
     });
     this.#pointEditComponent = new editForm({
       point: this.#point,
       destinations: this.#destinations || [],
       offers: this.#offers || [],
-      onFormSubmit: () => {
-        this.#handleSubmit(this.#point);
-        document.removeEventListener('keydown', this.#onEscKeyDownClose);
-      },
+      onFormSubmit: this.#handleSubmit,
+      onFormReset: this.#editFormResetHandler,
     });
 
     if (prevPointComponent === null || prevPointEditComponent === null) {
@@ -71,11 +66,9 @@ export default class PointPresenter {
     remove(prevPointEditComponent);
   }
 
-  #replacePoint() {
+  #replacePoint = () => {
     replace(this.#pointEditComponent, this.#pointComponent);
-    this.#handleModeChange();
-    this.#mode = Mode.EDITING;
-  }
+  };
 
   #replaceEditForm() {
     replace(this.#pointComponent, this.#pointEditComponent);
@@ -92,7 +85,9 @@ export default class PointPresenter {
   };
 
   #handleFavoriteClick = () => {
-    this.#handleDataChange({ ...this.#point, isFavorite: !this.#point.isFavorite });
+    const updatedPoint = {...this.#point,isFavorite: !this.#point.isFavorite};
+    this.#handleDataChange(updatedPoint);
+    this.#point = updatedPoint;
   };
 
   #handleSubmit = (point) => {
@@ -110,4 +105,16 @@ export default class PointPresenter {
       this.#replaceEditForm();
     }
   }
+
+  #editBtnClickHandler = () => {
+    this.#replacePoint();
+    this.#handleModeChange();
+    document.addEventListener('keydown', this.#onEscKeyDownClose);
+    this.#mode = Mode.EDITING;
+  };
+
+  #editFormResetHandler = () => {
+    this.#replaceEditForm();
+    document.removeEventListener('keydown', this.#onEscKeyDownClose);
+  };
 }
