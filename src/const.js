@@ -1,4 +1,10 @@
 import { pointFuture, pointPast, pointPresent } from './utils';
+
+export const Mode = {
+  DEFAULT: 'DEFAULT',
+  EDITING: 'EDITING',
+};
+
 export const POINT_TYPE = ['taxi', 'bus', 'ship', 'train', 'flight', 'drive', 'check-in', 'sightseeing', 'restaurant'];
 export const DATE_FORMAT = {
   'full-date': 'YYYY-MM-DD',

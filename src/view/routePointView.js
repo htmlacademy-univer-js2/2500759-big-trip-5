@@ -50,19 +50,32 @@ export default class routePoint extends AbstractView {
   #point;
   #destinations;
   #offers;
-  #handleSubmit;
+  #onEditClick = null;
+  #handleFavoriteBtnClick = null;
 
-  constructor(point, destinations, offers, handleSubmit) {
+  constructor({point, destinations, offers, onEditClick, onFavoriteClick}) {
     super();
     this.#point = point;
     this.#destinations = destinations;
     this.#offers = offers;
-    this.#handleSubmit = handleSubmit;
+    this.#onEditClick = onEditClick;
+    this.#handleFavoriteBtnClick = onFavoriteClick;
 
-    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#handleSubmit);
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#editClickHandler);
+    this.element.querySelector('.event__favorite-btn').addEventListener('click', this.#favoriteClickHandler);
   }
 
   get template() {
     return createRoutePointTemplate(this.#point, this.#destinations, this.#offers);
   }
+
+  #editClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#onEditClick();
+  };
+
+  #favoriteClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFavoriteBtnClick();
+  };
 }
