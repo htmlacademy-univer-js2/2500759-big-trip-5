@@ -12,4 +12,8 @@ export default class OffersModel {
   getOffers() {
     return this.offers;
   }
+
+  getByType(type) {
+    return this.offers.find((offer) => offer.type === type)?.offers || [];
+  }
 }

@@ -3,9 +3,15 @@ import { DATE_FORMAT } from '../const.js';
 import { formateDate } from '../utils.js';
 
 function createEditFormTemplate(point, destinations, offers) {
-  const {basePrice, dateFrom, dateTo, type} = point;
-  const pointDestination = destinations.find((d) => d.id === point.destination);
-  const pointOffers = offers.find((offer) => offer.type === type).offers;
+  const safeDestinations = Array.isArray(destinations) ? destinations : [];
+  const safeOffers = Array.isArray(offers) ? offers : [];
+
+  const {basePrice, dateFrom, dateTo, type, destination: destinationId} = point;
+  const pointDestination = safeDestinations.find((d) => d.id === destinationId) || {};
+
+  const typeOffer = safeOffers.find((offer) => offer.type === type);
+  const pointOffers = typeOffer ? typeOffer.offers : [];
+
 
   return `<form class="event event--edit" action="#" method="post">
                 <header class="event__header">
@@ -132,18 +138,30 @@ export default class editForm extends AbstractView {
   #offers;
   #handleSubmit;
 
-  constructor(point, destinations, offers, handleSubmit) {
+  constructor({point, destinations = [], offers = [], onFormSubmit}) {
     super();
     this.#point = point;
     this.#destinations = destinations;
     this.#offers = offers;
-    this.#handleSubmit = handleSubmit;
+    this.#handleSubmit = onFormSubmit;
 
-    this.element.addEventListener('submit', this.#handleSubmit);
-    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#handleSubmit);
+    this.element.addEventListener('submit', this.#formSubmitHandler);
+    const rollupBtn = this.element.querySelector('.event__rollup-btn');
+    if (rollupBtn) {
+      rollupBtn.addEventListener('click', this.#formSubmitHandler);
+    }
   }
 
+  #formSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleSubmit(this.#point);
+  };
+
   get template() {
-    return createEditFormTemplate(this.#point, this.#destinations, this.#offers);
+    return createEditFormTemplate(
+      this.#point,
+      this.#destinations,
+      this.#offers
+    );
   }
 }
