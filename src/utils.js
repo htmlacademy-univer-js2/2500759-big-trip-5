@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import objectSupport from 'dayjs/plugin/objectSupport';
-import { SortTypes } from './const';
+import { SortTypes, FORM_INPUT_TIME_FORMAT } from './const';
 
 
 dayjs.extend(utc);
@@ -35,4 +35,18 @@ const sort = {
   )
 };
 
-export {formateDate, getDuration, updateItem, isEscapeKey, sort};
+function capitalize(string) {
+  return string[0].toUpperCase() + string.slice(1);
+}
+
+const toCamelCase = (str) => str.replace(/([-_][a-z])/ig, ($1) => $1.toUpperCase().replace('-', '').replace('_', ''));
+
+function getFormTimeString(date) {
+  if(!date) {
+    return null;
+  }
+
+  return dayjs(date).format(FORM_INPUT_TIME_FORMAT);
+}
+
+export {formateDate, getDuration, updateItem, isEscapeKey, sort, capitalize, toCamelCase, getFormTimeString};

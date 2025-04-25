@@ -33,9 +33,8 @@ export default class PointsPresenter {
   }
 
   init() {
-    this.#points = [...this.#pointsModel.points];
-    this.#offers = [...this.#offersModel.offers];
-    this.#destinations = [...this.#destinationModel.destinations];
+    this.#points = [...this.#pointsModel.getPoints()];
+    this.#destinations = [...this.#destinationModel.getDestinations()];
 
     this.#renderComponents();
   }
@@ -45,8 +44,14 @@ export default class PointsPresenter {
   }
 
   #handlePointChange = (updatedPoint) => {
-    this.#points = updateItem(this.#points, updatedPoint);
-    this.#pointPresenter.get(updatedPoint.id).init(updatedPoint);
+    if (updatedPoint.action === 'DELETE') {
+      this.#points = this.#points.filter((point) => point.id !== updatedPoint.point.id);
+      this.#pointPresenter.get(updatedPoint.point.id).destroy();
+      this.#pointPresenter.delete(updatedPoint.point.id);
+    } else {
+      this.#points = updateItem(this.#points, updatedPoint.point);
+      this.#pointPresenter.get(updatedPoint.point.id).init(updatedPoint.point);
+    }
   };
 
   #handleModeChange = () => {
@@ -68,7 +73,7 @@ export default class PointsPresenter {
   #renderPoint(point) {
     const pointPresenter = new PointPresenter({
       pointListContainer: document.querySelector('.trip-events__list'),
-      offers: this.#offers,
+      offersModel: this.#offersModel,
       destinations: this.#destinations,
       onDataChange: this.#handlePointChange,
       onModeChange: this.#handleModeChange,

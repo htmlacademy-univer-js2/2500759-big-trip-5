@@ -7,7 +7,7 @@ export const Mode = {
   EDITING: 'EDITING',
 };
 
-
+export const FORM_INPUT_TIME_FORMAT = 'DD/MM/YY HH:MM';
 export const POINT_TYPE = ['taxi', 'bus', 'ship', 'train', 'flight', 'drive', 'check-in', 'sightseeing', 'restaurant'];
 export const DATE_FORMAT = {
   'full-date': 'YYYY-MM-DD',
