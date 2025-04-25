@@ -3,9 +3,9 @@ import { formateDate, getDuration } from '../utils.js';
 import { DATE_FORMAT } from '../const.js';
 
 function createRoutePointTemplate(point, destinations, offers) {
-  const {basePrice, dateFrom, dateTo, isFavorite, type} = point;
-  const pointDestination = destinations.find((d) => d.id === point.destination);
-  const pointOffers = offers.find((offer) => offer.type === type).offers.filter((offer) => point.offers.includes(offer.id));
+  const {basePrice, dateFrom, dateTo, isFavorite, type, offers: selectedOfferIds = []} = point;
+  const pointDestination = destinations?.find((d) => d.id === point.destination) || {};
+  const pointOffers = Array.isArray(offers) ? offers.filter((offer) => selectedOfferIds.includes(offer.id)) : [];
 
   return `<li class="trip-events__item">
               <div class="event">

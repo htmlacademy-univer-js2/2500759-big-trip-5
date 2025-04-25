@@ -12,19 +12,19 @@ export default class PointPresenter {
   #handleDataChange = null;
   #handleModeChange = null;
   #mode = Mode.DEFAULT;
-  #offers = [];
   #destinations = [];
+  #offersModel = null;
 
   constructor({
     pointListContainer,
-    offers,
+    offersModel,
     destinations,
     onDataChange,
     onModeChange
   }) {
     this.#pointListContainer = pointListContainer;
     this.#destinations = destinations;
-    this.#offers = offers;
+    this.#offersModel = offersModel;
     this.#handleDataChange = onDataChange;
     this.#handleModeChange = onModeChange;
   }
@@ -33,18 +33,23 @@ export default class PointPresenter {
     this.#point = point;
     const prevPointComponent = this.#pointComponent;
     const prevPointEditComponent = this.#pointEditComponent;
+    const currentTypeOffers = this.#offersModel?.getOffersByType(point.type) || [];
+
+    if (!this.#point.offers) {
+      this.#point.offers = [];
+    }
 
     this.#pointComponent = new routePoint({
       point: this.#point,
       destinations: this.#destinations,
-      offers: this.#offers,
+      offers: currentTypeOffers,
       onEditClick: this.#editBtnClickHandler,
       onFavoriteClick: this.#handleFavoriteClick
     });
     this.#pointEditComponent = new editForm({
       point: this.#point,
       destinations: this.#destinations || [],
-      offers: this.#offers || [],
+      allOffers: this.#offersModel.allOffers,
       onFormSubmit: this.#handleSubmit,
       onFormReset: this.#editFormResetHandler,
     });
@@ -91,7 +96,11 @@ export default class PointPresenter {
   };
 
   #handleSubmit = (point) => {
-    this.#handleDataChange(point);
+    if (point.isDeleting) {
+      this.#handleDataChange({action: 'DELETE', point});
+    } else {
+      this.#handleDataChange({action: 'UPDATE', point});
+    }
     this.#replaceEditForm();
   };
 
