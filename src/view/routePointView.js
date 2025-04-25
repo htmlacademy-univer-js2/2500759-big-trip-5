@@ -1,7 +1,7 @@
 import AbstractView from '../framework/view/abstract-view';
-import { formateDate, getDuration } from '../utils.js';
+import { formateDate } from '../utils.js';
 import { DATE_FORMAT } from '../const.js';
-
+import { calculateDuration } from '../utils.js';
 function createRoutePointTemplate(point, destinations, offers) {
   const {basePrice, dateFrom, dateTo, isFavorite, type, offers: selectedOfferIds = []} = point;
   const pointDestination = destinations?.find((d) => d.id === point.destination) || {};
@@ -16,11 +16,11 @@ function createRoutePointTemplate(point, destinations, offers) {
                 <h3 class="event__title">${type} ${pointDestination.name}</h3>
                 <div class="event__schedule">
                   <p class="event__time">
-                    <time class="event__start-time" datetime="${formateDate(dateFrom, DATE_FORMAT['full-date-and-time'])}">${formateDate(dateFrom, DATE_FORMAT['hours-minutes'])}</time>
+                    <time class="event__start-time" datetime="${formateDate(dateFrom, 'full-date-and-time')}">${formateDate(dateFrom, 'hours-minutes')}</time>
                     &mdash;
-                    <time class="event__end-time" datetime="${formateDate(dateTo, DATE_FORMAT['full-date-and-time'])}">${formateDate(dateTo, DATE_FORMAT['hours-minutes'])}</time>
+                    <time class="event__end-time" datetime="${formateDate(dateTo, 'full-date-and-time')}">${formateDate(dateTo, 'hours-minutes')}</time>
                   </p>
-                  <p class="event__duration">${getDuration(dateFrom, dateTo)}</p>
+                  <p class="event__duration">${calculateDuration(dateFrom, dateTo)}</p>
                 </div>
                 <p class="event__price">
                   &euro;&nbsp;<span class="event__price-value">${basePrice}</span>
