@@ -1,6 +1,8 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { capitalize } from '../utils.js';
 import { getFormTimeString } from '../utils.js';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 
 function getEventListItemTemplate(offersType, id) {
   return (
@@ -167,6 +169,9 @@ export default class editForm extends AbstractStatefulView {
   #destinations;
   #handleSubmit;
 
+  #datepickerFrom = null;
+  #datepickerTo = null;
+
   constructor({point, allOffers, destinations, onFormSubmit}) {
     super();
     this.#allOffers = allOffers;
@@ -217,6 +222,46 @@ export default class editForm extends AbstractStatefulView {
     [...this.element.querySelectorAll('.event__offer-checkbox')].forEach((checkbox) => {
       checkbox.addEventListener('change', this.#offerChangeHandler);
     });
+    this.#initDatepickers();
+  }
+
+  #initDatepickers() {
+    const dateFromInput = this.element.querySelector('#event-start-time-1');
+    const dateToInput = this.element.querySelector('#event-end-time-1');
+
+    this.#datepickerFrom = flatpickr(dateFromInput, {
+      enableTime: true,
+      dateFormat: 'd/m/y H:i',
+      defaultDate: this._state.dateFrom,
+      onChange: (selectedDates) => {
+        this.updateElement({
+          dateFrom: selectedDates[0]
+        });
+      }
+    });
+
+    this.#datepickerTo = flatpickr(dateToInput, {
+      enableTime: true,
+      dateFormat: 'd/m/y H:i',
+      defaultDate: this._state.dateTo,
+      onChange: (selectedDates) => {
+        this.updateElement({
+          dateTo: selectedDates[0]
+        });
+      }
+    });
+  }
+
+  destroy() {
+    super.destroy();
+    if (this.#datepickerFrom) {
+      this.#datepickerFrom.destroy();
+      this.#datepickerFrom = null;
+    }
+    if (this.#datepickerTo) {
+      this.#datepickerTo.destroy();
+      this.#datepickerTo = null;
+    }
   }
 
   #pointTypeChangeHandler = (evt) => {

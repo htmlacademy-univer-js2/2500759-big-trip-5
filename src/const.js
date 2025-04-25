@@ -7,14 +7,16 @@ export const Mode = {
   EDITING: 'EDITING',
 };
 
-export const FORM_INPUT_TIME_FORMAT = 'DD/MM/YY HH:MM';
+export const FORM_INPUT_TIME_FORMAT = 'DD/MM/YY HH:mm';
 export const POINT_TYPE = ['taxi', 'bus', 'ship', 'train', 'flight', 'drive', 'check-in', 'sightseeing', 'restaurant'];
 export const DATE_FORMAT = {
   'full-date': 'YYYY-MM-DD',
   'month-day': 'MMM DD',
   'hours-minutes': 'HH:mm',
-  'full-date-and-time': 'YYYY-MM-DDTHH:MM',
+  'full-date-and-time': 'YYYY-MM-DDTHH:mm',
   'full-date-and-time-slash': 'DD/MM/YYYY HH:mm',
+  'flatpickr': 'd/m/y H:i',
+  'duration': 'HH[H] mm[M]'
 };
 
 export const FILTER_TYPES = {

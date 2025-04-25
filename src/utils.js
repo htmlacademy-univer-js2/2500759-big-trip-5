@@ -1,28 +1,39 @@
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import objectSupport from 'dayjs/plugin/objectSupport';
-import { SortTypes, FORM_INPUT_TIME_FORMAT } from './const';
+import { SortTypes, DATE_FORMAT } from './const';
+import duration from 'dayjs/plugin/duration';
+import relativeTime from 'dayjs/plugin/relativeTime';
 
 
-dayjs.extend(utc);
-dayjs.extend(objectSupport);
+dayjs.extend(duration);
+dayjs.extend(relativeTime);
 
-const formateDate = (date, format) => dayjs(date).utc().format(format);
+const formateDate = (date, formatKey) => {
+  if (!date) {
+    return '';
+  }
+  const format = DATE_FORMAT[formatKey] || formatKey;
+  return dayjs(date).format(format);
+};
+const calculateDuration = (start, end) => {
+  if (!start || !end) {
+    return '';
+  }
 
-const getDuration = (dateFrom, dateTo) => {
-  const result = dayjs(dateTo).diff(dayjs(dateFrom), 'minute');
+  const diff = dayjs(end).diff(dayjs(start));
+  const days = dayjs.duration(diff).days();
+  const hours = dayjs.duration(diff).hours();
+  const minutes = dayjs.duration(diff).minutes();
 
-  if (result < 60) {
-    return dayjs({minute: result}).format('mm[M]');
-  } else if (result < 1440) {
-    return dayjs({minute: result}).format('HH[H] mm[M]');
-  } else {
-    const minutes = result % 60;
-    const days = Math.floor(result / (60 * 24));
-    const hours = Math.floor(result / 60) - 24 * days;
+  if (days > 0) {
     return `${days}D ${hours}H ${minutes}M`;
   }
+  if (hours > 0) {
+    return `${hours}H ${minutes}M`;
+  }
+  return `${minutes}M`;
 };
+
+const getDuration = (dateFrom, dateTo) => calculateDuration(dateFrom, dateTo);
 
 
 const updateItem = (items, update) => items.map((item) => item.id === update.id ? update : item);
@@ -42,11 +53,7 @@ function capitalize(string) {
 const toCamelCase = (str) => str.replace(/([-_][a-z])/ig, ($1) => $1.toUpperCase().replace('-', '').replace('_', ''));
 
 function getFormTimeString(date) {
-  if(!date) {
-    return null;
-  }
-
-  return dayjs(date).format(FORM_INPUT_TIME_FORMAT);
+  return formateDate(date, 'full-date-and-time-slash');
 }
 
-export {formateDate, getDuration, updateItem, isEscapeKey, sort, capitalize, toCamelCase, getFormTimeString};
+export {formateDate, calculateDuration, getDuration, updateItem, isEscapeKey, sort, capitalize, toCamelCase, getFormTimeString};
