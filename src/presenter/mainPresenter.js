@@ -1,9 +1,7 @@
 import PointsList from '../view/pointsListView.js';
 import { render } from '../framework/render.js';
 import Sort from '../view/sortView.js';
-//import { generateFilters } from '../mock/filters.js';
 import Filter from '../view/filterView.js';
-import { updateItem } from '../utils.js';
 import PointsPresenter from './points-presenter.js';
 import { SortTypes } from '../const.js';
 import dayjs from 'dayjs';
@@ -64,8 +62,9 @@ export default class Presenter {
   }
 
   handleEventChange = (updatedPoint) => {
-    this.points = updateItem(this.points, updatedPoint);
-    this.#pointsPresenter.updatePoint(updatedPoint);
+    this.#pointsModel.updatePoint(updatedPoint.point);
+    this.points = this.#sortPoints(this.#pointsModel.getPoints());
+    this.#pointsPresenter.updatePoint(updatedPoint.point);
   };
 
   #handleModeChange = () => {

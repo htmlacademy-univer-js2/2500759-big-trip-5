@@ -1,7 +1,6 @@
 import { render } from '../framework/render';
 import EmptyPoints from '../view/emptyPointsListView';
 import PointPresenter from './point-presenter';
-import { updateItem } from '../utils';
 
 
 export default class PointsPresenter {
@@ -35,7 +34,6 @@ export default class PointsPresenter {
   init() {
     this.#points = [...this.#pointsModel.getPoints()];
     this.#destinations = [...this.#destinationModel.getDestinations()];
-
     this.#renderComponents();
   }
 
@@ -44,12 +42,11 @@ export default class PointsPresenter {
   }
 
   #handlePointChange = (updatedPoint) => {
+    this.#pointsModel.updatePoint(updatedPoint.point);
     if (updatedPoint.action === 'DELETE') {
-      this.#points = this.#points.filter((point) => point.id !== updatedPoint.point.id);
       this.#pointPresenter.get(updatedPoint.point.id).destroy();
       this.#pointPresenter.delete(updatedPoint.point.id);
     } else {
-      this.#points = updateItem(this.#points, updatedPoint.point);
       this.#pointPresenter.get(updatedPoint.point.id).init(updatedPoint.point);
     }
   };
@@ -80,6 +77,10 @@ export default class PointsPresenter {
     });
     pointPresenter.init(point);
     this.#pointPresenter.set(point.id, pointPresenter);
+  }
+
+  updatePoint(updatedPoint) {
+    this.#pointPresenter.get(updatedPoint.id).init(updatedPoint);
   }
 
   destroy() {
