@@ -1,14 +1,33 @@
-import { points } from '../mock/points.js';
+//import { points } from '../mock/points.js';
 
 export default class PointsModel {
   #points = [];
+  #filterModel = null;
 
-  init() {
-    this.#points = points;
+  constructor(filterModel) {
+    this.#filterModel = filterModel;
+  }
+
+  init(pointsData) {
+    this.#points = pointsData;
   }
 
   getPoints() {
-    return this.#points;
+    const filter = this.#filterModel?.filter || 'everything';
+    const now = new Date();
+
+    switch (filter) {
+      case 'future':
+        return this.#points.filter((point) => new Date(point.dateFrom) > now);
+      case 'present':
+        return this.#points.filter((point) => new Date(point.dateFrom) <= now && new Date(point.dateTo) >= now
+        );
+      case 'past':
+        return this.#points.filter((point) => new Date(point.dateTo) < now);
+      case 'everything':
+      default:
+        return [...this.#points];
+    }
   }
 
   setPoints(pointsData) {

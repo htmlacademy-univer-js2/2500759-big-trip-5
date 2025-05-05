@@ -7,7 +7,7 @@ export default class PointsPresenter {
   #points = [];
   #offers = [];
   #destinations = [];
-
+  #filterModel = null;
   #pointsModel = null;
   #destinationModel = null;
   #offersModel = null;
@@ -22,13 +22,15 @@ export default class PointsPresenter {
     offersModel,
     pointsModel,
     pointsListView,
-    eventsContainer
+    eventsContainer,
+    filterModel
   }) {
     this.#destinationModel = destinationModel;
     this.#offersModel = offersModel;
     this.#pointsModel = pointsModel;
     this.#pointsListView = pointsListView;
     this.#container = eventsContainer;
+    this.#filterModel = filterModel;
   }
 
   init() {
@@ -59,7 +61,8 @@ export default class PointsPresenter {
     render(this.#pointsListView, this.#container);
 
     if (this.#points.length === 0) {
-      render(new EmptyPoints(), this.#container);
+      render(new EmptyPoints(this.#filterModel.filter), this.#container);
+      return;
     }
 
     for (let i = 0; i < this.#points.length; i++) {
@@ -86,5 +89,8 @@ export default class PointsPresenter {
   destroy() {
     this.#pointPresenter.forEach((presenter) => presenter.destroy());
     this.#pointPresenter.clear();
+    if (this.#pointsListView) {
+      this.#pointsListView.element.remove();
+    }
   }
 }

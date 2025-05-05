@@ -91,7 +91,7 @@ export default class PointPresenter {
 
   #handleFavoriteClick = () => {
     const updatedPoint = {...this.#point,isFavorite: !this.#point.isFavorite};
-    this.#handleDataChange(updatedPoint);
+    this.#handleDataChange({ action: 'UPDATE', point: updatedPoint });
     this.#point = updatedPoint;
   };
 

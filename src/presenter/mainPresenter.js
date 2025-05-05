@@ -1,7 +1,7 @@
 import PointsList from '../view/pointsListView.js';
 import { render } from '../framework/render.js';
-import Sort from '../view/sortView.js';
-import Filter from '../view/filterView.js';
+import SortView from '../view/sortView.js';
+import FilterPresenter from './filter-presenter.js';
 import PointsPresenter from './points-presenter.js';
 import { SortTypes } from '../const.js';
 import dayjs from 'dayjs';
@@ -13,21 +13,23 @@ export default class Presenter {
   #destinationModel = null;
   #offersModel = null;
   #pointsPresenter = null;
+  #filterModel = null;
   #sortType = SortTypes.DAY;
   #pointsListComponent = new PointsList();
 
-  constructor({eventsContainer, filterContainer, pointsModel, destinationModel, offersModel}) {
+  constructor({eventsContainer, filterContainer, pointsModel, destinationModel, offersModel, filterModel}) {
     this.#eventsContainer = eventsContainer;
     this.#filterContainer = filterContainer;
     this.#pointsModel = pointsModel;
     this.#destinationModel = destinationModel;
     this.#offersModel = offersModel;
+    this.#filterModel = filterModel;
   }
 
   init() {
     const points = this.#pointsModel.getPoints();
     const destinations = this.#destinationModel.getDestinations();
-
+    this.#filterModel.addObserver(this.#handleFilterChange);
     this.points = this.#sortPoints(points);
     this.destinations = destinations;
     this.renderPage();
@@ -41,11 +43,38 @@ export default class Presenter {
   }
 
   #renderSort() {
-    render(new Sort({onSortChange: this.#handleSortChange}), this.#eventsContainer);
+    const sortComponent = new SortView({
+      onSortTypeChange: (sortType) => {
+        this.#sortType = sortType;
+        this.#updatePoints();
+      }
+    });
+    render(sortComponent, this.#eventsContainer);
+  }
+
+  #handleSortChange = (sortType) => {
+    if (this.#sortType === sortType) {
+      return;
+    }
+    this.#sortType = sortType;
+    this.points = this.#sortPoints(this.#pointsModel.getPoints());
+    this.#clearPointsBoard();
+    this.#renderPoints();
+  };
+
+  #updatePoints() {
+    this.points = this.#sortPoints(this.#pointsModel.getPoints());
+    this.#clearPointsBoard();
+    this.#renderPoints();
   }
 
   #renderFilter() {
-    render(new Filter({points: this.eventsList}), this.#filterContainer);
+    const filterPresenter = new FilterPresenter({
+      filterContainer: this.#filterContainer,
+      filterModel: this.#filterModel,
+      pointsModel: this.#pointsModel
+    });
+    filterPresenter.init();
   }
 
   #renderPoints() {
@@ -75,27 +104,25 @@ export default class Presenter {
     this.#pointsPresenter.destroy();
   }
 
-  #handleSortChange = (evt) => {
-    if (evt.target.closest('input')) {
-      if (this.#sortType === evt.target.dataset.sortType) {
-        return;
-      }
-      this.#sortType = evt.target.dataset.sortType;
-      this.points = this.#sortPoints(this.#pointsModel.getPoints());
-      this.#clearPointsBoard();
-      this.#renderPoints();
-    }
-  };
-
   #sortPoints(points) {
+    const sortedPoints = [...points];
     switch (this.#sortType) {
       case SortTypes.PRICE:
-        return [...points].sort((a, b) => b.basePrice - a.basePrice);
+        return sortedPoints.sort((a, b) => b.basePrice - a.basePrice);
       case SortTypes.TIME:
-        return [...points].sort((a, b) => dayjs(b.dateTo).diff(b.dateFrom) - dayjs(a.dateTo).diff(a.dateFrom));
+        return sortedPoints.sort((a, b) => {
+          const durationA = dayjs(a.dateTo).diff(a.dateFrom);
+          const durationB = dayjs(b.dateTo).diff(b.dateFrom);
+          return durationB - durationA;
+        });
       case SortTypes.DAY:
       default:
-        return [...points].sort((a, b) => dayjs(a.dateFrom).diff(b.dateFrom));
+        return sortedPoints.sort((a, b) => dayjs(a.dateFrom).diff(b.dateFrom));
     }
   }
+
+  #handleFilterChange = () => {
+    this.#sortType = SortTypes.DAY;
+    this.#updatePoints();
+  };
 }

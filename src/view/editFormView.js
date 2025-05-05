@@ -53,7 +53,9 @@ function getAvailableOfferTemplate(offersData, isActive) {
 }
 
 function getAvailableOffersTemplate(offersData, pointActiveOffers) {
-
+  if (!offersData || !Array.isArray(offersData)) {
+    return '';
+  }
   return (
     `<div class="event__available-offers">
       ${offersData.map((offerData) => {
@@ -94,7 +96,7 @@ function createEditFormTemplate(pointData, allOffers, destinations) {
 
   const eventTimeStart = getFormTimeString(dateFrom);
   const eventTimeEnd = getFormTimeString(dateTo);
-  const offersByCurrentPointType = allOffers[type];
+  const offersByCurrentPointType = allOffers[type] || [];
 
   const offersListTemplate = getEventListTemplate(Object.keys(allOffers));
   const destinationsListTemplate = getEventDestinationsListTemplate(destinations);
