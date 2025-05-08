@@ -44,12 +44,24 @@ export default class PointsPresenter {
   }
 
   #handlePointChange = (updatedPoint) => {
-    this.#pointsModel.updatePoint(updatedPoint.point);
-    if (updatedPoint.action === 'DELETE') {
-      this.#pointPresenter.get(updatedPoint.point.id).destroy();
-      this.#pointPresenter.delete(updatedPoint.point.id);
-    } else {
-      this.#pointPresenter.get(updatedPoint.point.id).init(updatedPoint.point);
+    switch (updatedPoint.action) {
+      case 'DELETE':
+        this.#pointsModel.deletePoint(updatedPoint.point.id);
+        this.#pointPresenter.get(updatedPoint.point.id)?.destroy();
+        this.#pointPresenter.delete(updatedPoint.point.id);
+        break;
+      case 'ADD':
+        this.#pointsModel.addPoint(updatedPoint.point);
+        this.#renderPoint(updatedPoint.point);
+        setTimeout(() => {
+          this.#pointPresenter.get(updatedPoint.point.id)?.destroy();
+          this.#pointPresenter.delete(updatedPoint.point.id);
+        }, 0);
+        break;
+      case 'UPDATE':
+        this.#pointsModel.updatePoint(updatedPoint.point);
+        this.#pointPresenter.get(updatedPoint.point.id)?.init(updatedPoint.point);
+        break;
     }
   };
 
@@ -92,5 +104,9 @@ export default class PointsPresenter {
     if (this.#pointsListView) {
       this.#pointsListView.element.remove();
     }
+  }
+
+  resetView() {
+    this.#pointPresenter.forEach((presenter) => presenter.resetView());
   }
 }

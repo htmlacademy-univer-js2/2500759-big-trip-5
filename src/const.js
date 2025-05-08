@@ -40,3 +40,9 @@ export const SortTypes = {
   PRICE: 'price',
   OFFER: 'offer'
 };
+
+export const UserAction = {
+  UPDATE: 'UPDATE',
+  DELETE: 'DELETE',
+  ADD: 'ADD',
+};

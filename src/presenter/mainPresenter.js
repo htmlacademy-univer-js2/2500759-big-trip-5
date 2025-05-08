@@ -5,6 +5,7 @@ import FilterPresenter from './filter-presenter.js';
 import PointsPresenter from './points-presenter.js';
 import { SortTypes } from '../const.js';
 import dayjs from 'dayjs';
+import PointPresenter from './point-presenter.js';
 
 export default class Presenter {
   #eventsContainer = null;
@@ -16,6 +17,7 @@ export default class Presenter {
   #filterModel = null;
   #sortType = SortTypes.DAY;
   #pointsListComponent = new PointsList();
+  #destinations = [];
 
   constructor({eventsContainer, filterContainer, pointsModel, destinationModel, offersModel, filterModel}) {
     this.#eventsContainer = eventsContainer;
@@ -28,11 +30,45 @@ export default class Presenter {
 
   init() {
     const points = this.#pointsModel.getPoints();
-    const destinations = this.#destinationModel.getDestinations();
+    this.#destinations = this.#destinationModel.getDestinations();
     this.#filterModel.addObserver(this.#handleFilterChange);
     this.points = this.#sortPoints(points);
-    this.destinations = destinations;
     this.renderPage();
+
+    const newEventButton = document.querySelector('.trip-main__event-add-btn');
+    newEventButton.addEventListener('click', this.#handleNewEventButtonClick);
+  }
+
+  #handleNewEventButtonClick = () => {
+    this.#filterModel.setFilter('everything');
+    this.#sortType = SortTypes.DAY;
+    this.#pointsPresenter.resetView();
+    this.#renderNewPointForm();
+  };
+
+  #renderNewPointForm() {
+    const defaultDestination = this.#destinations[0];
+    const newPoint = {
+      id: crypto.randomUUID(),
+      type: 'taxi',
+      dateFrom: new Date().toISOString(),
+      dateTo: new Date().toISOString(),
+      basePrice: 0,
+      offers: [],
+      isFavorite: false,
+      destination: defaultDestination.id,
+      activeDestination: defaultDestination,
+      isNew: true,
+    };
+    const pointPresenter = new PointPresenter({
+      pointListContainer: document.querySelector('.trip-events__list'),
+      offersModel: this.#offersModel,
+      destinations: this.#destinations,
+      onDataChange: this.handleEventChange,
+      onModeChange: this.#handleModeChange,
+    });
+    pointPresenter.init(newPoint);
+    pointPresenter.setEditMode();
   }
 
   renderPage() {
@@ -91,9 +127,18 @@ export default class Presenter {
   }
 
   handleEventChange = (updatedPoint) => {
-    this.#pointsModel.updatePoint(updatedPoint.point);
-    this.points = this.#sortPoints(this.#pointsModel.getPoints());
-    this.#pointsPresenter.updatePoint(updatedPoint.point);
+    switch (updatedPoint.action) {
+      case 'ADD':
+        this.#pointsModel.addPoint(updatedPoint.point);
+        break;
+      case 'DELETE':
+        this.#pointsModel.deletePoint(updatedPoint.point.id);
+        break;
+      case 'UPDATE':
+        this.#pointsModel.updatePoint(updatedPoint.point);
+        break;
+    }
+    this.#updatePoints();
   };
 
   #handleModeChange = () => {

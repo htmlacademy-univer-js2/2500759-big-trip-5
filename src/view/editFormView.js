@@ -92,7 +92,9 @@ function createEditFormTemplate(pointData, allOffers, destinations) {
     type
   } = pointData;
 
-  const { name, description, pictures } = activeDestination;
+  const name = activeDestination?.name || '';
+  const description = activeDestination?.description || '';
+  const pictures = activeDestination?.pictures || [];
 
   const eventTimeStart = getFormTimeString(dateFrom);
   const eventTimeEnd = getFormTimeString(dateTo);
@@ -102,6 +104,7 @@ function createEditFormTemplate(pointData, allOffers, destinations) {
   const destinationsListTemplate = getEventDestinationsListTemplate(destinations);
   const availableOffersTemplate = getAvailableOffersTemplate(offersByCurrentPointType, offers);
   const eventPhotosTemplate = getEventPhotosTemplate(pictures);
+  const destinationNames = destinations.map((d) => d.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
 
   return (
     `<li class="trip-events__item">
@@ -121,7 +124,7 @@ function createEditFormTemplate(pointData, allOffers, destinations) {
             <label class="event__label  event__type-output" for="event-destination-1">
               ${type}
             </label>
-            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${name}" list="destination-list-1">
+            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${name}" list="destination-list-1" pattern="^(${destinationNames})$" title="Выберите город из списка">
             ${destinationsListTemplate}
           </div>
 
@@ -186,7 +189,25 @@ export default class editForm extends AbstractStatefulView {
 
   #formSubmit = (evt) => {
     evt.preventDefault();
-    if (evt.type === 'submit' && evt.submitter?.classList?.contains('event__reset-btn')) {
+    const destinationInput = this.element.querySelector('.event__input--destination');
+    const priceInput = this.element.querySelector('.event__input--price');
+
+    if (!this.#destinations.some((d) => d.name === destinationInput.value)) {
+      destinationInput.setCustomValidity('Выберите город из списка');
+      destinationInput.reportValidity();
+      return;
+    }
+
+    if (!/^\d+$/.test(priceInput.value)) {
+      priceInput.setCustomValidity('Введите корректную цену');
+      priceInput.reportValidity();
+      return;
+    }
+
+    destinationInput.setCustomValidity('');
+    priceInput.setCustomValidity('');
+
+    if (evt.submitter?.classList?.contains('event__reset-btn')) {
       this.#handleDelete();
     } else {
       this.#handleSubmit(this.parseStateToPoint(this._state));
@@ -194,7 +215,11 @@ export default class editForm extends AbstractStatefulView {
   };
 
   #handleDelete = () => {
-    this.#handleSubmit({...this.parseStateToPoint(this._state), isDeleting: true});
+    this.#handleSubmit({ ...this.parseStateToPoint(this._state), isDeleting: true });
+  };
+
+  #replaceEditForm = () => {
+    this.destroy();
   };
 
   get template() {
@@ -224,8 +249,33 @@ export default class editForm extends AbstractStatefulView {
     [...this.element.querySelectorAll('.event__offer-checkbox')].forEach((checkbox) => {
       checkbox.addEventListener('change', this.#offerChangeHandler);
     });
+
+    this.element.querySelector('.event__input--price')
+      .addEventListener('keydown', this.#priceInputHandler);
+
+    this.element.querySelector('.event__input--destination')
+      .addEventListener('input', this.#destinationInputHandler);
+
     this.#initDatepickers();
   }
+
+  #priceInputHandler = (evt) => {
+    if (!/[\d]|Backspace|Delete|Tab|Arrow/.test(evt.key)) {
+      evt.preventDefault();
+    }
+  };
+
+  #destinationInputHandler = (evt) => {
+    const input = evt.target;
+    const value = input.value.toLowerCase();
+    const hasMatch = this.#destinations.some((d) => d.name.toLowerCase().includes(value)
+    );
+    if (!hasMatch && value.length > 0) {
+      input.setCustomValidity('Город не найден в списке');
+    } else {
+      input.setCustomValidity('');
+    }
+  };
 
   #initDatepickers() {
     const dateFromInput = this.element.querySelector('#event-start-time-1');
@@ -284,6 +334,12 @@ export default class editForm extends AbstractStatefulView {
     const newDestinationName = evt.target.value;
     const newDestination = this.#destinations.find(({ name }) => name === newDestinationName);
 
+    if (!newDestination) {
+      evt.target.setCustomValidity('Выберите город из списка');
+      evt.target.reportValidity();
+      return;
+    }
+    evt.target.setCustomValidity('');
     this.updateElement({
       destination: newDestination.id,
       activeDestination: newDestination

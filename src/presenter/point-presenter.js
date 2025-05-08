@@ -97,9 +97,11 @@ export default class PointPresenter {
 
   #handleSubmit = (point) => {
     if (point.isDeleting) {
-      this.#handleDataChange({action: 'DELETE', point});
+      this.#handleDataChange({ action: 'DELETE', point });
+    } else if (point.isNew) {
+      this.#handleDataChange({ action: 'ADD', point });
     } else {
-      this.#handleDataChange({action: 'UPDATE', point});
+      this.#handleDataChange({ action: 'UPDATE', point });
     }
     this.#replaceEditForm();
   };
@@ -126,4 +128,9 @@ export default class PointPresenter {
     this.#replaceEditForm();
     document.removeEventListener('keydown', this.#onEscKeyDownClose);
   };
+
+  setEditMode() {
+    this.#replacePoint();
+    this.#mode = Mode.EDITING;
+  }
 }
