@@ -1,14 +1,13 @@
 import { render } from '../framework/render';
 import EmptyPoints from '../view/emptyPointsListView';
 import PointPresenter from './point-presenter';
-import { updateItem } from '../utils';
 
 
 export default class PointsPresenter {
   #points = [];
   #offers = [];
   #destinations = [];
-
+  #filterModel = null;
   #pointsModel = null;
   #destinationModel = null;
   #offersModel = null;
@@ -23,19 +22,20 @@ export default class PointsPresenter {
     offersModel,
     pointsModel,
     pointsListView,
-    eventsContainer
+    eventsContainer,
+    filterModel
   }) {
     this.#destinationModel = destinationModel;
     this.#offersModel = offersModel;
     this.#pointsModel = pointsModel;
     this.#pointsListView = pointsListView;
     this.#container = eventsContainer;
+    this.#filterModel = filterModel;
   }
 
   init() {
     this.#points = [...this.#pointsModel.getPoints()];
     this.#destinations = [...this.#destinationModel.getDestinations()];
-
     this.#renderComponents();
   }
 
@@ -44,13 +44,24 @@ export default class PointsPresenter {
   }
 
   #handlePointChange = (updatedPoint) => {
-    if (updatedPoint.action === 'DELETE') {
-      this.#points = this.#points.filter((point) => point.id !== updatedPoint.point.id);
-      this.#pointPresenter.get(updatedPoint.point.id).destroy();
-      this.#pointPresenter.delete(updatedPoint.point.id);
-    } else {
-      this.#points = updateItem(this.#points, updatedPoint.point);
-      this.#pointPresenter.get(updatedPoint.point.id).init(updatedPoint.point);
+    switch (updatedPoint.action) {
+      case 'DELETE':
+        this.#pointsModel.deletePoint(updatedPoint.point.id);
+        this.#pointPresenter.get(updatedPoint.point.id)?.destroy();
+        this.#pointPresenter.delete(updatedPoint.point.id);
+        break;
+      case 'ADD':
+        this.#pointsModel.addPoint(updatedPoint.point);
+        this.#renderPoint(updatedPoint.point);
+        setTimeout(() => {
+          this.#pointPresenter.get(updatedPoint.point.id)?.destroy();
+          this.#pointPresenter.delete(updatedPoint.point.id);
+        }, 0);
+        break;
+      case 'UPDATE':
+        this.#pointsModel.updatePoint(updatedPoint.point);
+        this.#pointPresenter.get(updatedPoint.point.id)?.init(updatedPoint.point);
+        break;
     }
   };
 
@@ -62,7 +73,8 @@ export default class PointsPresenter {
     render(this.#pointsListView, this.#container);
 
     if (this.#points.length === 0) {
-      render(new EmptyPoints(), this.#container);
+      render(new EmptyPoints(this.#filterModel.filter), this.#container);
+      return;
     }
 
     for (let i = 0; i < this.#points.length; i++) {
@@ -82,8 +94,19 @@ export default class PointsPresenter {
     this.#pointPresenter.set(point.id, pointPresenter);
   }
 
+  updatePoint(updatedPoint) {
+    this.#pointPresenter.get(updatedPoint.id).init(updatedPoint);
+  }
+
   destroy() {
     this.#pointPresenter.forEach((presenter) => presenter.destroy());
     this.#pointPresenter.clear();
+    if (this.#pointsListView) {
+      this.#pointsListView.element.remove();
+    }
+  }
+
+  resetView() {
+    this.#pointPresenter.forEach((presenter) => presenter.resetView());
   }
 }
