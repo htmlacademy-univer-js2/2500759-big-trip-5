@@ -42,7 +42,25 @@ export const SortTypes = {
 };
 
 export const UserAction = {
-  UPDATE: 'UPDATE',
+  UPDATE_POINT: 'UPDATE_POINT',
+  ADD_POINT: 'ADD_POINT',
+  DELETE_POINT: 'DELETE_POINT',
+};
+
+export const ApiMethod = {
+  GET: 'GET',
+  PUT: 'PUT',
+  POST: 'POST',
   DELETE: 'DELETE',
-  ADD: 'ADD',
+};
+
+export const ContentType = {
+  JSON: 'application/json',
+};
+
+export const UpdateType = {
+  PATCH: 'PATCH',
+  MINOR: 'MINOR',
+  MAJOR: 'MAJOR',
+  INIT: 'INIT',
 };

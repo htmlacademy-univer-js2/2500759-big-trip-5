@@ -1,15 +1,13 @@
-//import { points } from '../mock/points.js';
-
 export default class PointsModel {
   #points = [];
   #filterModel = null;
+  #destinationsModel = null;
+  #offersModel = null;
+  #apiService = null;
 
-  constructor(filterModel) {
+  constructor(filterModel, apiService) {
     this.#filterModel = filterModel;
-  }
-
-  init(pointsData) {
-    this.#points = pointsData;
+    this.#apiService = apiService;
   }
 
   getPoints() {
@@ -30,12 +28,30 @@ export default class PointsModel {
     }
   }
 
+  async init() {
+    try {
+      const points = await this.#apiService.getPoints();
+      this.#points = points.map(this.#adaptToClient);
+      return true;
+    } catch (err) {
+      this.#points = [];
+      return false;
+    }
+  }
+
   setPoints(pointsData) {
     this.#points = pointsData;
   }
 
-  updatePoint(updatedPoint) {
-    this.#points = this.#points.map((point) => point.id === updatedPoint.id ? updatedPoint : point);
+  async updatePoint(update) {
+    try {
+      const response = await this.#apiService.updatePoint(update);
+      const updatedPoint = this.#adaptToClient(response);
+      this.#points = this.#points.map((point) => point.id === updatedPoint.id ? updatedPoint : point);
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
 
   addPoint(point) {
@@ -44,5 +60,22 @@ export default class PointsModel {
 
   deletePoint(id) {
     this.#points = this.#points.filter((point) => point.id !== id);
+  }
+
+  #adaptToClient(point) {
+    const adaptedPoint = {
+      ...point,
+      dateFrom: point['date_from'],
+      dateTo: point['date_to'],
+      basePrice: point['base_price'],
+      isFavorite: point['is_favorite'],
+    };
+
+    delete adaptedPoint['date_from'];
+    delete adaptedPoint['date_to'];
+    delete adaptedPoint['base_price'];
+    delete adaptedPoint['is_favorite'];
+
+    return adaptedPoint;
   }
 }

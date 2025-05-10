@@ -1,11 +1,13 @@
 import PointsList from '../view/pointsListView.js';
-import { render } from '../framework/render.js';
+import { render,remove } from '../framework/render.js';
 import SortView from '../view/sortView.js';
 import FilterPresenter from './filter-presenter.js';
 import PointsPresenter from './points-presenter.js';
-import { SortTypes } from '../const.js';
+import { SortTypes, UserAction, UpdateType } from '../const.js';
 import dayjs from 'dayjs';
 import PointPresenter from './point-presenter.js';
+import TripInfoPresenter from './trip-info-presenter.js';
+import LoadingView from '../view/loading-view.js';
 
 export default class Presenter {
   #eventsContainer = null;
@@ -18,25 +20,43 @@ export default class Presenter {
   #sortType = SortTypes.DAY;
   #pointsListComponent = new PointsList();
   #destinations = [];
+  #loadingComponent = null;
+  #tripInfoPresenter = null;
+  #tripMainContainer = null;
 
-  constructor({eventsContainer, filterContainer, pointsModel, destinationModel, offersModel, filterModel}) {
+  constructor({eventsContainer, filterContainer, pointsModel, destinationModel, offersModel, filterModel, tripMainContainer,}) {
     this.#eventsContainer = eventsContainer;
     this.#filterContainer = filterContainer;
     this.#pointsModel = pointsModel;
     this.#destinationModel = destinationModel;
     this.#offersModel = offersModel;
     this.#filterModel = filterModel;
+    this.#tripMainContainer = tripMainContainer;
   }
 
   init() {
-    const points = this.#pointsModel.getPoints();
-    this.#destinations = this.#destinationModel.getDestinations();
-    this.#filterModel.addObserver(this.#handleFilterChange);
-    this.points = this.#sortPoints(points);
-    this.renderPage();
+    this.#renderLoading();
 
-    const newEventButton = document.querySelector('.trip-main__event-add-btn');
-    newEventButton.addEventListener('click', this.#handleNewEventButtonClick);
+    Promise.all([
+      this.#destinationModel.init(),
+      this.#offersModel.init(),
+      this.#pointsModel.init(),
+    ])
+      .then(() => {
+        this.#removeLoading();
+        this.#destinations = this.#destinationModel.destinations;
+        this.#filterModel.addObserver(this.#handleFilterChange);
+        this.points = this.#sortPoints(this.#pointsModel.getPoints());
+        this.renderPage();
+        this.#renderTripInfo();
+
+        const newEventButton = document.querySelector('.trip-main__event-add-btn');
+        newEventButton.addEventListener('click', this.#handleNewEventButtonClick);
+      })
+      .catch(() => {
+        this.#removeLoading();
+        this.#renderPoints();
+      });
   }
 
   #handleNewEventButtonClick = () => {
@@ -127,18 +147,19 @@ export default class Presenter {
   }
 
   handleEventChange = (updatedPoint) => {
+    let actionType;
     switch (updatedPoint.action) {
       case 'ADD':
-        this.#pointsModel.addPoint(updatedPoint.point);
+        actionType = UserAction.ADD_POINT;
         break;
       case 'DELETE':
-        this.#pointsModel.deletePoint(updatedPoint.point.id);
+        actionType = UserAction.DELETE_POINT;
         break;
       case 'UPDATE':
-        this.#pointsModel.updatePoint(updatedPoint.point);
+        actionType = UserAction.UPDATE_POINT;
         break;
     }
-    this.#updatePoints();
+    this.#handleViewAction(actionType, UpdateType.MINOR, updatedPoint.point);
   };
 
   #handleModeChange = () => {
@@ -170,4 +191,56 @@ export default class Presenter {
     this.#sortType = SortTypes.DAY;
     this.#updatePoints();
   };
+
+  #renderLoading() {
+    this.#loadingComponent = new LoadingView();
+    render(this.#loadingComponent, this.#eventsContainer);
+  }
+
+  #removeLoading() {
+    if (this.#loadingComponent) {
+      remove(this.#loadingComponent);
+    }
+  }
+
+  #renderTripInfo() {
+    const tripInfoContainer = this.#tripMainContainer.querySelector('.trip-main');
+    this.#tripInfoPresenter = new TripInfoPresenter(tripInfoContainer, {
+      events: this.#pointsModel.points,
+      destinations: this.#destinationModel.destinations,
+    });
+    this.#tripInfoPresenter.init();
+  }
+
+  async #handleViewAction(actionType, updateType, update) {
+    switch (actionType) {
+      case UserAction.UPDATE_POINT:
+        this.#pointsPresenter.setSaving();
+        try {
+          await this.#pointsModel.updatePoint(update);
+          this.#updatePoints();
+        } catch (err) {
+          this.#pointsPresenter.setAborting();
+        }
+        break;
+      case UserAction.ADD_POINT:
+        this.#pointsPresenter.setSaving();
+        try {
+          await this.#pointsModel.addPoint(update);
+          this.#updatePoints();
+        } catch (err) {
+          this.#pointsPresenter.setAborting();
+        }
+        break;
+      case UserAction.DELETE_POINT:
+        this.#pointsPresenter.setDeleting();
+        try {
+          await this.#pointsModel.deletePoint(update.id);
+          this.#updatePoints();
+        } catch (err) {
+          this.#pointsPresenter.setAborting();
+        }
+        break;
+    }
+  }
 }

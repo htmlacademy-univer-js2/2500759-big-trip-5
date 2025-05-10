@@ -133,4 +133,27 @@ export default class PointPresenter {
     this.#replacePoint();
     this.#mode = Mode.EDITING;
   }
+
+  setSaving() {
+    if (this.#mode === Mode.EDITING) {
+      this.#pointEditComponent.updateElement({
+        isDisabled: true,
+        isSaving: true,
+      });
+    }
+  }
+
+  setAborting() {
+    if (this.#mode === Mode.EDITING) {
+      const resetFormState = () => {
+        this.#pointEditComponent.updateElement({
+          isDisabled: false,
+          isSaving: false,
+          isDeleting: false,
+        });
+      };
+
+      this.#pointEditComponent.shake(resetFormState);
+    }
+  }
 }

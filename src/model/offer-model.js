@@ -1,10 +1,9 @@
-import { offers } from '../mock/offers.js';
-
 export default class OffersModel {
-  #offers = offers;
+  #offers = [];
+  #apiService = null;
 
-  constructor() {
-    this.#offers = offers;
+  constructor(apiService) {
+    this.#apiService = apiService;
   }
 
   get allOffers() {
@@ -20,5 +19,15 @@ export default class OffersModel {
     }
     const offerGroup = this.#offers.find((group) => group.type === type);
     return offerGroup?.offers || [];
+  }
+
+  async init() {
+    try {
+      this.#offers = await this.#apiService.getOffers();
+      return true;
+    } catch (err) {
+      this.#offers = [];
+      return false;
+    }
   }
 }
