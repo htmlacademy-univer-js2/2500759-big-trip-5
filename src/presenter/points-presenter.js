@@ -43,25 +43,28 @@ export default class PointsPresenter {
     this.#renderPointsList();
   }
 
-  #handlePointChange = (updatedPoint) => {
-    switch (updatedPoint.action) {
-      case 'DELETE':
-        this.#pointsModel.deletePoint(updatedPoint.point.id);
-        this.#pointPresenter.get(updatedPoint.point.id)?.destroy();
-        this.#pointPresenter.delete(updatedPoint.point.id);
-        break;
-      case 'ADD':
-        this.#pointsModel.addPoint(updatedPoint.point);
-        this.#renderPoint(updatedPoint.point);
-        setTimeout(() => {
+  #handlePointChange = async (updatedPoint) => {
+    try {
+      switch (updatedPoint.action) {
+        case 'DELETE': {
+          await this.#pointsModel.deletePoint(updatedPoint.point.id);
           this.#pointPresenter.get(updatedPoint.point.id)?.destroy();
           this.#pointPresenter.delete(updatedPoint.point.id);
-        }, 0);
-        break;
-      case 'UPDATE':
-        this.#pointsModel.updatePoint(updatedPoint.point);
-        this.#pointPresenter.get(updatedPoint.point.id)?.init(updatedPoint.point);
-        break;
+          break;
+        }
+        case 'ADD': {
+          const newPoint = await this.#pointsModel.addPoint(updatedPoint.point);
+          this.#renderPoint(newPoint);
+          break;
+        }
+        case 'UPDATE': {
+          await this.#pointsModel.updatePoint(updatedPoint.point);
+          this.#pointPresenter.get(updatedPoint.point.id)?.init(updatedPoint.point);
+          break;
+        }
+      }
+    } catch {
+      this.setAborting();
     }
   };
 

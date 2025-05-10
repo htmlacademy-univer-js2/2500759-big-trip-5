@@ -51,7 +51,9 @@ export default class Presenter {
         this.#renderTripInfo();
 
         const newEventButton = document.querySelector('.trip-main__event-add-btn');
-        newEventButton.addEventListener('click', this.#handleNewEventButtonClick);
+        if (newEventButton) {
+          newEventButton.addEventListener('click', this.#handleNewEventButtonClick);
+        }
       })
       .catch(() => {
         this.#removeLoading();
@@ -100,10 +102,7 @@ export default class Presenter {
 
   #renderSort() {
     const sortComponent = new SortView({
-      onSortTypeChange: (sortType) => {
-        this.#sortType = sortType;
-        this.#updatePoints();
-      }
+      onSortTypeChange: this.#handleSortChange
     });
     render(sortComponent, this.#eventsContainer);
   }
