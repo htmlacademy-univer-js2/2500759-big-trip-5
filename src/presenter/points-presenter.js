@@ -35,7 +35,7 @@ export default class PointsPresenter {
 
   init() {
     this.#points = [...this.#pointsModel.getPoints()];
-    this.#destinations = [...this.#destinationModel.getDestinations()];
+    this.#destinations = [...this.#destinationModel.destinations];
     this.#renderComponents();
   }
 
@@ -68,6 +68,14 @@ export default class PointsPresenter {
   #handleModeChange = () => {
     this.#pointPresenter.forEach((presenter) => presenter.resetView());
   };
+
+  setSaving() {
+    this.#pointPresenter.forEach((presenter) => presenter.setSaving());
+  }
+
+  setAborting() {
+    this.#pointPresenter.forEach((presenter) => presenter.setAborting());
+  }
 
   #renderPointsList() {
     render(this.#pointsListView, this.#container);
