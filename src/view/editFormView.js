@@ -1,6 +1,5 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
-import { capitalize } from '../utils.js';
-import { getFormTimeString } from '../utils.js';
+import { capitalize, getFormTimeString } from '../utils.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
@@ -105,6 +104,8 @@ function createEditFormTemplate(pointData, allOffers, destinations) {
   const availableOffersTemplate = getAvailableOffersTemplate(offersByCurrentPointType, offers);
   const eventPhotosTemplate = getEventPhotosTemplate(pictures);
   const destinationNames = destinations.map((d) => d.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const saveButtonText = pointData.isSaving ? 'Saving...' : 'Save';
+  const deleteButtonText = pointData.isDeleting ? 'Deleting...' : 'Delete';
 
   return (
     `<li class="trip-events__item">
@@ -144,8 +145,8 @@ function createEditFormTemplate(pointData, allOffers, destinations) {
             <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${basePrice}">
           </div>
 
-          <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-          <button class="event__reset-btn" type="reset">Delete</button>
+          <button class="event__save-btn  btn  btn--blue" type="submit" ${pointData.isDisabled ? 'disabled' : ''}>${saveButtonText}</button>
+          <button class="event__reset-btn" type="reset" ${pointData.isDisabled ? 'disabled' : ''}>${deleteButtonText}</button>
           <button class="event__rollup-btn" type="button">
             <span class="visually-hidden">Open event</span>
           </button>
@@ -173,7 +174,7 @@ export default class editForm extends AbstractStatefulView {
   #allOffers;
   #destinations;
   #handleSubmit;
-
+  #state;
   #datepickerFrom = null;
   #datepickerTo = null;
 
@@ -182,7 +183,7 @@ export default class editForm extends AbstractStatefulView {
     this.#allOffers = allOffers;
     this.#destinations = destinations;
     this.#handleSubmit = onFormSubmit;
-
+    this.#state = this.parsePointToState(point);
     this._setState(this.parsePointToState(point));
     this._restoreHandlers();
   }
@@ -346,6 +347,7 @@ export default class editForm extends AbstractStatefulView {
     });
   };
 
+
   #offerChangeHandler = (evt) => {
     evt.preventDefault();
     const offerId = parseInt(evt.target.name, 10);
@@ -363,10 +365,13 @@ export default class editForm extends AbstractStatefulView {
   };
 
   parsePointToState(point) {
-    return {
-      ...point,
-      activeDestination: this.#destinations.find(({id}) => id === point.destination)
-    };
+    const state = {...point};
+    if (point.destination) {
+      state.activeDestination = this.#destinations.find(({id}) => id === point.destination) || null;
+    } else {
+      state.activeDestination = null;
+    }
+    return state;
   }
 
   parseStateToPoint(state) {
@@ -377,5 +382,32 @@ export default class editForm extends AbstractStatefulView {
     return {
       ...point
     };
+  }
+
+  updateElement(data) {
+    this.#state = { ...this.#state, ...data };
+    this.#rerender();
+  }
+
+  shake(callback) {
+    this.element.style.animation = 'shake 0.6s';
+    setTimeout(() => {
+      this.element.style.animation = '';
+      callback?.();
+    }, 600);
+  }
+
+  #rerender() {
+    const prevElement = this.element;
+    const parent = prevElement?.parentElement;
+    if (!parent) {
+      return;
+    }
+
+    this.removeElement();
+    const newElement = this.element;
+    parent.replaceChild(newElement, prevElement);
+    this._restoreHandlers();
+    this.#initDatepickers();
   }
 }

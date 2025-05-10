@@ -54,12 +54,25 @@ export default class PointsModel {
     }
   }
 
-  addPoint(point) {
-    this.#points.push(point);
+  async addPoint(point) {
+    try {
+      const response = await this.#apiService.addPoint(point);
+      const newPoint = this.#adaptToClient(response);
+      this.#points.push(newPoint);
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
 
-  deletePoint(id) {
-    this.#points = this.#points.filter((point) => point.id !== id);
+  async deletePoint(id) {
+    try {
+      await this.#apiService.deletePoint(id);
+      this.#points = this.#points.filter((point) => point.id !== id);
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
 
   #adaptToClient(point) {

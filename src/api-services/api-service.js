@@ -69,6 +69,24 @@ export default class ApiService {
     return ApiService.parseResponse(response);
   }
 
+  async addPoint(point) {
+    const response = await this.#load({
+      url: 'points',
+      method: ApiMethod.POST,
+      body: JSON.stringify(this.#adaptToServer(point)),
+      headers: new Headers({ 'Content-Type': ContentType.JSON }),
+    });
+    return ApiService.parseResponse(response);
+  }
+
+  async deletePoint(id) {
+    const response = await this.#load({
+      url: `points/${id}`,
+      method: ApiMethod.DELETE,
+    });
+    return ApiService.parseResponse(response);
+  }
+
   #adaptToServer(point) {
     const adaptedPoint = {
       ...point,
