@@ -1,28 +1,31 @@
 import AbstractView from '../framework/view/abstract-view';
-import { formateDate } from '../utils';
-import { DATE_FORMAT } from '../const';
-const MAX_DESTINATIONS_TO_RENDER = 3;
+import { getRouteTitle, getTripDates } from '../utils';
 
-function createTripInfoTemplate({totalPrice, destinationNames, points}) {
-  const destinations = Array.from(new Set(destinationNames));
-  return (
-    `<section class="trip-main__trip-info  trip-info">
+function createTripInfoTemplate({ points, destinations }) {
+  if (!points || !points.length || !destinations || !destinations.length) {
+    return '<section class="trip-main__trip-info trip-info"></section>';
+  }
+  const routeTitle = getRouteTitle(points, destinations);
+  const dates = getTripDates(points);
+  const totalPrice = points.reduce((total, point) => total + (point.basePrice || point.price || 0), 0);
+  return `
+    <section class="trip-main__trip-info trip-info">
       <div class="trip-info__main">
-        <h1 class="trip-info__title">${destinations.length > MAX_DESTINATIONS_TO_RENDER ? `${destinations[0]} &mdash;...&mdash; ${destinations[destinations.length - 1]}` : destinations.join(' &mdash; ')}</h1>
-        <p class="trip-info__dates">${formateDate(points[0].dateFrom, DATE_FORMAT.TOTAL_MONTH)}&nbsp;&mdash;&nbsp;${formateDate(points[points.length - 1].dateTo, DATE_FORMAT.TOTAL_MONTH)}</p>
+        <h1 class="trip-info__title">${routeTitle}</h1>
+        <p class="trip-info__dates">${dates}</p>
       </div>
       <p class="trip-info__cost">
         Total: &euro;&nbsp;<span class="trip-info__cost-value">${totalPrice}</span>
       </p>
-    </section>`
-  );
+    </section>
+  `;
 }
 
 export default class TripInfo extends AbstractView {
-  #points = null;
-  #destinations = null;
+  #points = [];
+  #destinations = [];
 
-  constructor({points, destinations}) {
+  constructor({ points = [], destinations = [] }) {
     super();
     this.#points = points;
     this.#destinations = destinations;
@@ -30,9 +33,8 @@ export default class TripInfo extends AbstractView {
 
   get template() {
     return createTripInfoTemplate({
-      totalPrice: this.#calculateTotalPrice(),
-      destinationNames: this.#getDestinationNames(),
-      points: this.#points
+      points: this.#points,
+      destinations: this.#destinations,
     });
   }
 

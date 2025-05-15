@@ -56,4 +56,26 @@ function getFormTimeString(date) {
   return formateDate(date, 'full-date-and-time-slash');
 }
 
-export {formateDate, calculateDuration, getDuration, updateItem, isEscapeKey, sort, capitalize, toCamelCase, getFormTimeString};
+const getRouteTitle = (points, destinations) => {
+  if (points.length === 0) {
+    return 'No route';
+  }
+  const destinationNames = points.map((point) => destinations.find((d) => d.id === point.destination)?.name || '');
+  if (destinationNames.length <= 3) {
+    return destinationNames.join(' — ');
+  }
+  return `${destinationNames[0]} — ... — ${destinationNames[destinationNames.length - 1]}`;
+};
+
+const getTripDates = (points) => {
+  if (points.length === 0) {
+    return 'No dates';
+  }
+  const startDate = points[0].dateFrom;
+  const endDate = points[points.length - 1].dateTo;
+  return `${formateDate(startDate, 'month-day')} — ${formateDate(endDate, 'month-day')}`;
+};
+
+const calculateTotalPrice = (points) => points.reduce((total, point) => total + point.price, 0);
+
+export {formateDate, calculateDuration, getDuration, updateItem, isEscapeKey, sort, capitalize, toCamelCase, getFormTimeString, getRouteTitle, getTripDates, calculateTotalPrice};

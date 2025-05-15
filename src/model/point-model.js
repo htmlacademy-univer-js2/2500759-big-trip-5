@@ -1,4 +1,5 @@
-export default class PointsModel {
+import Observable from '../framework/observable';
+export default class PointsModel extends Observable {
   #points = [];
   #filterModel = null;
   #destinationsModel = null;
@@ -6,6 +7,7 @@ export default class PointsModel {
   #apiService = null;
 
   constructor(filterModel, apiService) {
+    super();
     this.#filterModel = filterModel;
     this.#apiService = apiService;
   }
@@ -32,6 +34,7 @@ export default class PointsModel {
     try {
       const points = await this.#apiService.getPoints();
       this.#points = points.map(this.#adaptToClient);
+      this._notify('INIT');
       return true;
     } catch (err) {
       this.#points = [];
@@ -48,6 +51,7 @@ export default class PointsModel {
       const response = await this.#apiService.updatePoint(update);
       const updatedPoint = this.#adaptToClient(response);
       this.#points = this.#points.map((point) => point.id === updatedPoint.id ? updatedPoint : point);
+      this._notify('MINOR');
       return true;
     } catch (err) {
       return false;
@@ -59,6 +63,7 @@ export default class PointsModel {
       const response = await this.#apiService.addPoint(point);
       const newPoint = this.#adaptToClient(response);
       this.#points.push(newPoint);
+      this._notify('MAJOR');
       return true;
     } catch (err) {
       return false;
@@ -69,6 +74,7 @@ export default class PointsModel {
     try {
       await this.#apiService.deletePoint(id);
       this.#points = this.#points.filter((point) => point.id !== id);
+      this._notify('MAJOR');
       return true;
     } catch (err) {
       return false;
@@ -80,7 +86,7 @@ export default class PointsModel {
       ...point,
       dateFrom: point['date_from'],
       dateTo: point['date_to'],
-      basePrice: point['base_price'],
+      basePrice: Number(point['base_price']) || 0,
       isFavorite: point['is_favorite'],
     };
 
