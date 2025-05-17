@@ -33,8 +33,8 @@ export default class PointsPresenter {
     this.#filterModel = filterModel;
   }
 
-  init() {
-    this.#points = [...this.#pointsModel.getPoints()];
+  init(points = this.#pointsModel.getPoints()) {
+    this.#points = [...points];
     this.#destinations = [...this.#destinationModel.destinations];
     this.#renderComponents();
   }
@@ -81,21 +81,46 @@ export default class PointsPresenter {
   }
 
   #renderPointsList() {
-    render(this.#pointsListView, this.#container);
+    if (!this.#pointsListView?.element) {
+      render(this.#pointsListView, this.#container);
+    }
 
-    if (this.#points.length === 0) {
-      render(new EmptyPoints(this.#filterModel.filter), this.#container);
+    const container = this.#pointsListView.element?.querySelector('.trip-events__list') || this.#pointsListView.element;
+
+    if (!container) {
       return;
     }
 
-    for (let i = 0; i < this.#points.length; i++) {
-      this.#renderPoint(this.#points[i]);
+    container.innerHTML = '';
+
+    if (this.#points.length === 0) {
+      render(new EmptyPoints(this.#filterModel.filter), container);
+      return;
+    }
+
+    this.#points.forEach((point) => this.#renderPoint(point));
+  }
+
+  #clearPointsList() {
+    const listElement = this.#pointsListView.element;
+    while (listElement.firstChild) {
+      listElement.removeChild(listElement.firstChild);
     }
   }
 
+  #getListContainer() {
+    const container = this.#pointsListView.element.querySelector('.trip-events__list');
+    if (!container) {
+      throw new Error('List container element is required');
+    }
+    return container;
+  }
+
   #renderPoint(point) {
+    const container = this.#pointsListView.element.querySelector('.trip-events__list') || this.#pointsListView.element;
+
     const pointPresenter = new PointPresenter({
-      pointListContainer: document.querySelector('.trip-events__list'),
+      pointListContainer: container,
       offersModel: this.#offersModel,
       destinations: this.#destinations,
       onDataChange: this.#handlePointChange,

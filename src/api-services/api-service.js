@@ -46,7 +46,8 @@ export default class ApiService {
 
   async getPoints() {
     const response = await this.#load({ url: 'points' });
-    return ApiService.parseResponse(response);
+    const points = await ApiService.parseResponse(response);
+    return points;
   }
 
   async getDestinations() {

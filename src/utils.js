@@ -78,4 +78,12 @@ const getTripDates = (points) => {
 
 const calculateTotalPrice = (points) => points.reduce((total, point) => total + point.price, 0);
 
+export function getPointPrice(point) {
+  return point.basePrice || point.price || 0;
+}
+
+export function getPointDuration(point) {
+  return dayjs(point.dateTo).diff(point.dateFrom);
+}
+
 export {formateDate, calculateDuration, getDuration, updateItem, isEscapeKey, sort, capitalize, toCamelCase, getFormTimeString, getRouteTitle, getTripDates, calculateTotalPrice};

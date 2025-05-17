@@ -190,23 +190,19 @@ export default class editForm extends AbstractStatefulView {
 
   #formSubmit = (evt) => {
     evt.preventDefault();
-    const destinationInput = this.element.querySelector('.event__input--destination');
-    const priceInput = this.element.querySelector('.event__input--price');
-
-    if (!this.#destinations.some((d) => d.name === destinationInput.value)) {
-      destinationInput.setCustomValidity('Выберите город из списка');
-      destinationInput.reportValidity();
+    const destination = this.element.querySelector('.event__input--destination').value;
+    const price = this.element.querySelector('.event__input--price').value;
+    if (!this.#destinations.some((d) => d.name === destination)) {
+      destination.setCustomValidity('Please select a valid destination');
       return;
     }
 
-    if (!/^\d+$/.test(priceInput.value)) {
-      priceInput.setCustomValidity('Введите корректную цену');
-      priceInput.reportValidity();
+    if (!price || isNaN(price)) {
+      price.setCustomValidity('Please enter a valid price');
       return;
     }
 
-    destinationInput.setCustomValidity('');
-    priceInput.setCustomValidity('');
+    this.#handleSubmit(this.parseStateToPoint(this._state));
 
     if (evt.submitter?.classList?.contains('event__reset-btn')) {
       this.#handleDelete();
@@ -350,7 +346,7 @@ export default class editForm extends AbstractStatefulView {
 
   #offerChangeHandler = (evt) => {
     evt.preventDefault();
-    const offerId = parseInt(evt.target.name, 10);
+    const offerId = evt.target.name;
     const newOffers = [...this._state.offers];
 
     if (newOffers.includes(offerId)) {

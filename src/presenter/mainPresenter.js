@@ -36,7 +36,6 @@ export default class Presenter {
 
   init() {
     this.#renderLoading();
-
     Promise.all([
       this.#destinationModel.init(),
       this.#offersModel.init(),
@@ -95,8 +94,9 @@ export default class Presenter {
 
   renderPage() {
     this.#renderSort();
-    this.#renderFilter();
+    this.#pointsListComponent = new PointsList();
     render(this.#pointsListComponent, this.#eventsContainer);
+    this.#renderFilter();
     this.#renderPoints();
   }
 
@@ -111,16 +111,35 @@ export default class Presenter {
     if (this.#sortType === sortType) {
       return;
     }
+
     this.#sortType = sortType;
-    this.points = this.#sortPoints(this.#pointsModel.getPoints());
-    this.#clearPointsBoard();
-    this.#renderPoints();
+
+    this.#eventsContainer.style.opacity = '0.5';
+    setTimeout(() => {
+      this.#updatePoints();
+      this.#eventsContainer.style.opacity = '1';
+    }, 300);
   };
 
-  #updatePoints() {
-    this.points = this.#sortPoints(this.#pointsModel.getPoints());
-    this.#clearPointsBoard();
-    this.#renderPoints();
+  #updatePoints(filter = this.#filterModel.filter) {
+    const filteredPoints = this.#filterPoints(this.#pointsModel.getPoints(), filter);
+    const sortedPoints = this.#sortPoints(filteredPoints);
+    this.#pointsPresenter.init(sortedPoints);
+  }
+
+  #filterPoints(points, filter) {
+    const now = new Date();
+    const result = points.filter((point) => {
+      const from = new Date(point.dateFrom);
+      const to = new Date(point.dateTo);
+      switch (filter) {
+        case 'future': return from > now;
+        case 'present': return from <= now && to >= now;
+        case 'past': return to < now;
+        default: return true;
+      }
+    });
+    return result;
   }
 
   #renderFilter() {
@@ -133,6 +152,10 @@ export default class Presenter {
   }
 
   #renderPoints() {
+    if (!this.#pointsListComponent?.element) {
+      this.#pointsListComponent = new PointsList();
+      render(this.#pointsListComponent, this.#eventsContainer);
+    }
     this.#pointsPresenter = new PointsPresenter({
       pointsListView: this.#pointsListComponent,
       eventsContainer: this.#eventsContainer,
@@ -142,7 +165,7 @@ export default class Presenter {
       onDataChange: this.handleEventChange,
       onModeChange: this.#handleModeChange
     });
-    this.#pointsPresenter.init();
+    this.#pointsPresenter.init(this.#sortPoints(this.#pointsModel.getPoints()));
   }
 
   handleEventChange = (updatedPoint) => {
@@ -171,24 +194,31 @@ export default class Presenter {
 
   #sortPoints(points) {
     const sortedPoints = [...points];
+
     switch (this.#sortType) {
       case SortTypes.PRICE:
-        return sortedPoints.sort((a, b) => b.basePrice - a.basePrice);
+        return sortedPoints.sort((a, b) => {
+          const priceA = a.basePrice || a.price || 0;
+          const priceB = b.basePrice || b.price || 0;
+          return priceB - priceA;
+        });
+
       case SortTypes.TIME:
         return sortedPoints.sort((a, b) => {
           const durationA = dayjs(a.dateTo).diff(a.dateFrom);
           const durationB = dayjs(b.dateTo).diff(b.dateFrom);
           return durationB - durationA;
         });
+
       case SortTypes.DAY:
       default:
         return sortedPoints.sort((a, b) => dayjs(a.dateFrom).diff(b.dateFrom));
     }
   }
 
-  #handleFilterChange = () => {
+  #handleFilterChange = (filter) => {
     this.#sortType = SortTypes.DAY;
-    this.#updatePoints();
+    this.#updatePoints(filter);
   };
 
   #renderLoading() {

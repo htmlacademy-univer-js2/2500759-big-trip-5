@@ -7,7 +7,7 @@ import ApiService from './api-services/api-service.js';
 import TripInfoPresenter from './presenter/trip-info-presenter.js';
 
 const AUTHORIZATION = 'Basic ahsfsdfsdfs43242';
-const END_POINT = 'https://21.objects.htmlacademy.pro/big-trip';
+const END_POINT = 'https://24.objects.htmlacademy.pro/big-trip';
 
 const filterContainer = document.body.querySelector('.trip-controls__filters');
 const eventsContainer = document.body.querySelector('.trip-events');

@@ -1,7 +1,5 @@
 import { render, replace, remove } from '../framework/render.js';
 import Filter from '../view/filterView.js';
-import { FILTER_TYPES } from '../const.js';
-//const filterContainer = document.querySelector('.trip-controls__filters');
 
 export default class FilterPresenter {
   #filterContainer = null;
@@ -40,34 +38,29 @@ export default class FilterPresenter {
 
     return [
       {
-        type: FILTER_TYPES.EVERYTHING,
+        type: 'everything',
         count: points.length,
-        isDisabled: false
+        isDisabled: points.length === 0
       },
       {
-        type: FILTER_TYPES.FUTURE,
-        count: points.filter((point) => new Date(point.dateFrom) > now).length,
-        isDisabled: points.filter((point) => new Date(point.dateFrom) > now).length === 0
+        type: 'future',
+        count: points.filter((p) => new Date(p.dateFrom) > now).length,
+        isDisabled: points.filter((p) => new Date(p.dateFrom) > now).length === 0
       },
       {
-        type: FILTER_TYPES.PRESENT,
-        count: points.filter((point) => new Date(point.dateFrom) <= now && new Date(point.dateTo) >= now
-        ).length,
-        isDisabled: points.filter((point) => new Date(point.dateFrom) <= now && new Date(point.dateTo) >= now
-        ).length === 0
+        type: 'present',
+        count: points.filter((point) => new Date(point.dateFrom) <= now && new Date(point.dateTo) >= now).length,
+        isDisabled: points.filter((p) => new Date(p.dateFrom) <= now && new Date(p.dateTo) >= now).length === 0
       },
       {
-        type: FILTER_TYPES.PAST,
+        type: 'past',
         count: points.filter((point) => new Date(point.dateTo) < now).length,
-        isDisabled: points.filter((point) => new Date(point.dateTo) < now).length === 0
+        isDisabled: points.filter((p) => new Date(p.dateTo) < now).length === 0
       }
     ];
   }
 
   #handleFilterTypeChange = (filterType) => {
-    if (this.#filterModel.filter === filterType) {
-      return;
-    }
     this.#filterModel.setFilter(filterType);
   };
 }

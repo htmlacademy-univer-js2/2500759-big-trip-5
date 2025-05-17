@@ -6,10 +6,10 @@ export default class FilterModel {
     return this.#currentFilter;
   }
 
-  setFilter(newFilter) {
-    if (this.#currentFilter !== newFilter) {
-      this.#currentFilter = newFilter;
-      this.#notifyObservers();
+  setFilter(filter) {
+    if (this.#currentFilter !== filter) {
+      this.#currentFilter = filter;
+      this.#notifyObservers(filter);
     }
   }
 
@@ -17,7 +17,7 @@ export default class FilterModel {
     this.#observers.push(observer);
   }
 
-  #notifyObservers() {
-    this.#observers.forEach((observer) => observer());
+  #notifyObservers(filter) {
+    this.#observers.forEach((observer) => observer(filter));
   }
 }

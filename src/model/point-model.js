@@ -13,21 +13,7 @@ export default class PointsModel extends Observable {
   }
 
   getPoints() {
-    const filter = this.#filterModel?.filter || 'everything';
-    const now = new Date();
-
-    switch (filter) {
-      case 'future':
-        return this.#points.filter((point) => new Date(point.dateFrom) > now);
-      case 'present':
-        return this.#points.filter((point) => new Date(point.dateFrom) <= now && new Date(point.dateTo) >= now
-        );
-      case 'past':
-        return this.#points.filter((point) => new Date(point.dateTo) < now);
-      case 'everything':
-      default:
-        return [...this.#points];
-    }
+    return [...this.#points];
   }
 
   async init() {
@@ -86,7 +72,8 @@ export default class PointsModel extends Observable {
       ...point,
       dateFrom: point['date_from'],
       dateTo: point['date_to'],
-      basePrice: Number(point['base_price']) || 0,
+      basePrice: point['base_price'],
+      price: point['base_price'],
       isFavorite: point['is_favorite'],
     };
 
