@@ -173,7 +173,7 @@ export default class createForm extends AbstractStatefulView{
     this.#destinations = destinations;
 
     const initState = {
-      type: 'taxi',
+      type: 'flight',
       dateFrom: null,
       dateTo: null,
       destination: null,

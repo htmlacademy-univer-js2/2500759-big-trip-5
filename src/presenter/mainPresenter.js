@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import PointPresenter from './point-presenter.js';
 import TripInfoPresenter from './trip-info-presenter.js';
 import LoadingView from '../view/loading-view.js';
+import NewEventBtnView from '../view/newEventBtnView.js';
 
 export default class Presenter {
   #eventsContainer = null;
@@ -48,6 +49,7 @@ export default class Presenter {
         this.points = this.#sortPoints(this.#pointsModel.getPoints());
         this.renderPage();
         this.#renderTripInfo();
+        this.#renderNewEventButton();
 
         const newEventButton = document.querySelector('.trip-main__event-add-btn');
         if (newEventButton) {
@@ -57,40 +59,99 @@ export default class Presenter {
       .catch(() => {
         this.#removeLoading();
         this.#renderPoints();
+        this.#renderNewEventButton();
       });
   }
+
+  #renderNewEventButton() {
+    const newEventButtonView = new NewEventBtnView({
+      onBtnClick: this.#handleNewEventButtonClick
+    });
+    render(newEventButtonView, this.#tripMainContainer);
+  }
+
+  // #handleNewEventButtonClick = () => {
+  //   this.#filterModel.setFilter('everything');
+  //   this.#sortType = SortTypes.DAY;
+  //   this.#pointsPresenter.resetView();
+  //   this.#renderNewPointForm();
+  // };
+
+  // #renderNewPointForm() {
+  //   const defaultDestination = this.#destinations[0];
+  //   const newPoint = {
+  //     id: crypto.randomUUID(),
+  //     type: 'taxi',
+  //     dateFrom: new Date().toISOString(),
+  //     dateTo: new Date().toISOString(),
+  //     basePrice: 0,
+  //     offers: [],
+  //     isFavorite: false,
+  //     destination: defaultDestination.id,
+  //     activeDestination: defaultDestination,
+  //     isNew: true,
+  //   };
+  //   const pointPresenter = new PointPresenter({
+  //     pointListContainer: document.querySelector('.trip-events__list'),
+  //     offersModel: this.#offersModel,
+  //     destinations: this.#destinations,
+  //     onDataChange: this.handleEventChange,
+  //     onModeChange: this.#handleModeChange,
+  //   });
+  //   pointPresenter.init(newPoint);
+  //   pointPresenter.setEditMode();
+  // }
 
   #handleNewEventButtonClick = () => {
     this.#filterModel.setFilter('everything');
     this.#sortType = SortTypes.DAY;
-    this.#pointsPresenter.resetView();
-    this.#renderNewPointForm();
-  };
 
-  #renderNewPointForm() {
+    const newEventButton = document.querySelector('.trip-main__event-add-btn');
+    if (newEventButton) {
+      newEventButton.disabled = true;
+    }
+
+    this.#pointsPresenter.resetView();
+
     const defaultDestination = this.#destinations[0];
     const newPoint = {
       id: crypto.randomUUID(),
-      type: 'taxi',
+      type: 'flight',
       dateFrom: new Date().toISOString(),
       dateTo: new Date().toISOString(),
       basePrice: 0,
       offers: [],
       isFavorite: false,
-      destination: defaultDestination.id,
-      activeDestination: defaultDestination,
+      destination: defaultDestination?.id || null,
+      activeDestination: defaultDestination || null,
       isNew: true,
     };
+
     const pointPresenter = new PointPresenter({
-      pointListContainer: document.querySelector('.trip-events__list'),
+      pointListContainer: this.#pointsListComponent.listContainer,
       offersModel: this.#offersModel,
       destinations: this.#destinations,
-      onDataChange: this.handleEventChange,
-      onModeChange: this.#handleModeChange,
+      onDataChange: (action) => {
+        this.handleEventChange(action);
+        if (newEventButton && (action.action === 'ADD' || action.action === 'DELETE')) {
+          newEventButton.disabled = false;
+        }
+      },
+      onModeChange: () => {
+        this.#handleModeChange();
+        if (newEventButton) {
+          newEventButton.disabled = false;
+        }
+      },
     });
+
     pointPresenter.init(newPoint);
     pointPresenter.setEditMode();
-  }
+  };
+
+  handleNewEventButtonClick = () => {
+    this.#handleNewEventButtonClick();
+  };
 
   renderPage() {
     this.#renderSort();

@@ -6,6 +6,7 @@ import FilterModel from './model/filter-model.js';
 import ApiService from './api-services/api-service.js';
 import TripInfoPresenter from './presenter/trip-info-presenter.js';
 
+
 const AUTHORIZATION = 'Basic ahsfsdfsdfs43242';
 const END_POINT = 'https://24.objects.htmlacademy.pro/big-trip';
 

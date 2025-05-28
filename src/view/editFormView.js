@@ -193,16 +193,14 @@ export default class editForm extends AbstractStatefulView {
     const destination = this.element.querySelector('.event__input--destination').value;
     const price = this.element.querySelector('.event__input--price').value;
     if (!this.#destinations.some((d) => d.name === destination)) {
-      destination.setCustomValidity('Please select a valid destination');
+      this.element.querySelector('.event__input--destination').setCustomValidity('Please select a valid destination');
       return;
     }
 
     if (!price || isNaN(price)) {
-      price.setCustomValidity('Please enter a valid price');
+      this.element.querySelector('.event__input--price').setCustomValidity('Please enter a valid price');
       return;
     }
-
-    this.#handleSubmit(this.parseStateToPoint(this._state));
 
     if (evt.submitter?.classList?.contains('event__reset-btn')) {
       this.#handleDelete();
@@ -212,6 +210,10 @@ export default class editForm extends AbstractStatefulView {
   };
 
   #handleDelete = () => {
+    this.updateElement({
+      isDisabled: true,
+      isDeleting: true
+    });
     this.#handleSubmit({ ...this.parseStateToPoint(this._state), isDeleting: true });
   };
 
@@ -235,7 +237,9 @@ export default class editForm extends AbstractStatefulView {
       .addEventListener('click', this.#handleDelete);
 
     this.element.querySelector('.event__rollup-btn')
-      .addEventListener('click', this.#formSubmit);
+      .addEventListener('click', () => {
+        this.#handleSubmit({ ...this.parseStateToPoint(this._state), isClosing: true });
+      });
 
     this.element.querySelector('.event__input--destination')
       .addEventListener('change', this.#pointDestinationChangeHandler);
@@ -248,7 +252,7 @@ export default class editForm extends AbstractStatefulView {
     });
 
     this.element.querySelector('.event__input--price')
-      .addEventListener('keydown', this.#priceInputHandler);
+      .addEventListener('input', this.#priceInputHandler);
 
     this.element.querySelector('.event__input--destination')
       .addEventListener('input', this.#destinationInputHandler);
@@ -275,6 +279,15 @@ export default class editForm extends AbstractStatefulView {
   };
 
   #initDatepickers() {
+    if (this.#datepickerFrom) {
+      this.#datepickerFrom.destroy();
+      this.#datepickerFrom = null;
+    }
+    if (this.#datepickerTo) {
+      this.#datepickerTo.destroy();
+      this.#datepickerTo = null;
+    }
+
     const dateFromInput = this.element.querySelector('#event-start-time-1');
     const dateToInput = this.element.querySelector('#event-end-time-1');
 
@@ -286,6 +299,9 @@ export default class editForm extends AbstractStatefulView {
         this.updateElement({
           dateFrom: selectedDates[0]
         });
+        if (this.#datepickerTo) {
+          this.#datepickerTo.set('minDate', selectedDates[0]);
+        }
       }
     });
 
@@ -293,6 +309,7 @@ export default class editForm extends AbstractStatefulView {
       enableTime: true,
       dateFormat: 'd/m/y H:i',
       defaultDate: this._state.dateTo,
+      minDate: this._state.dateFrom,
       onChange: (selectedDates) => {
         this.updateElement({
           dateTo: selectedDates[0]

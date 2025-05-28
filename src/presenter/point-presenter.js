@@ -3,7 +3,6 @@ import routePoint from '../view/routePointView';
 import editForm from '../view/editFormView';
 import { Mode } from '../const';
 import { isEscapeKey } from '../utils';
-import LoadingView from '../view/loading-view';
 
 export default class PointPresenter {
   #pointListContainer = null;
@@ -16,6 +15,10 @@ export default class PointPresenter {
   #destinations = [];
   #offersModel = null;
   #loadingComponent = null;
+
+  get pointComponent() {
+    return this.#pointComponent;
+  }
 
   constructor({
     pointListContainer,
@@ -79,16 +82,24 @@ export default class PointPresenter {
   };
 
   #replaceEditForm() {
-    replace(this.#pointComponent, this.#pointEditComponent);
-    document.removeEventListener('keydown', this.#onEscKeyDownClose);
-    this.#mode = Mode.DEFAULT;
+    if (this.#mode === Mode.EDITING) {
+      replace(this.#pointComponent, this.#pointEditComponent);
+      this.#pointEditComponent.destroy();
+      document.removeEventListener('keydown', this.#onEscKeyDownClose);
+      this.#mode = Mode.DEFAULT;
+      this.#handleModeChange();
+    }
   }
 
   #onEscKeyDownClose = (evt) => {
     if (isEscapeKey(evt)) {
       evt.preventDefault();
-      this.#replaceEditForm();
-      document.removeEventListener('keydown', this.#onEscKeyDownClose);
+      if (this.#point.isNew) {
+        this.destroy();
+        this.#handleDataChange({ action: 'DELETE', point: this.#point });
+      } else {
+        this.#replaceEditForm();
+      }
     }
   };
 
@@ -109,40 +120,22 @@ export default class PointPresenter {
   };
 
   #handleSubmit = async (point) => {
-    try {
-      this.#loadingComponent = new LoadingView({
-        isSaving: !point.isDeleting,
-        isDeleting: point.isDeleting
-      });
-      render(this.#loadingComponent, this.#pointListContainer);
+    if (point.isClosing) {
+      this.#replaceEditForm();
+      return;
+    }
 
+    try {
       if (point.isDeleting) {
-        this.#pointEditComponent.updateElement({
-          isDisabled: true,
-          isDeleting: true,
-        });
         await this.#handleDataChange({ action: 'DELETE', point });
       } else if (point.isNew) {
-        this.#pointEditComponent.updateElement({
-          isDisabled: true,
-          isSaving: true,
-        });
         await this.#handleDataChange({ action: 'ADD', point });
       } else {
-        this.#pointEditComponent.updateElement({
-          isDisabled: true,
-          isSaving: true,
-        });
         await this.#handleDataChange({ action: 'UPDATE', point });
       }
+      this.#replaceEditForm();
     } catch {
       this.setAborting();
-      this.#showError('Failed to save changes. Please try again.');
-    } finally {
-      if (this.#loadingComponent) {
-        remove(this.#loadingComponent);
-        this.#loadingComponent = null;
-      }
     }
   };
 
@@ -170,6 +163,9 @@ export default class PointPresenter {
   };
 
   setEditMode() {
+    if (!this.#pointEditComponent || !this.#pointComponent) {
+      this.init(this.#point);
+    }
     this.#replacePoint();
     this.#mode = Mode.EDITING;
   }
@@ -194,6 +190,15 @@ export default class PointPresenter {
       };
 
       this.#pointEditComponent.shake(resetFormState);
+    }
+  }
+
+  setDeleting() {
+    if (this.#mode === Mode.EDITING) {
+      this.#pointEditComponent.updateElement({
+        isDisabled: true,
+        isDeleting: true,
+      });
     }
   }
 }

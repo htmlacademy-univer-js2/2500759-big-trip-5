@@ -76,6 +76,10 @@ export default class PointsPresenter {
     this.#pointPresenter.forEach((presenter) => presenter.setSaving());
   }
 
+  setDeleting() {
+    this.#pointPresenter.forEach((presenter) => presenter.setDeleting());
+  }
+
   setAborting() {
     this.#pointPresenter.forEach((presenter) => presenter.setAborting());
   }
@@ -116,8 +120,22 @@ export default class PointsPresenter {
     return container;
   }
 
+  // #renderPoint(point) {
+  //   const container = this.#pointsListView.element.querySelector('.trip-events__list') || this.#pointsListView.element;
+
+  //   const pointPresenter = new PointPresenter({
+  //     pointListContainer: container,
+  //     offersModel: this.#offersModel,
+  //     destinations: this.#destinations,
+  //     onDataChange: this.#handlePointChange,
+  //     onModeChange: this.#handleModeChange,
+  //   });
+  //   pointPresenter.init(point);
+  //   this.#pointPresenter.set(point.id, pointPresenter);
+  // }
+
   #renderPoint(point) {
-    const container = this.#pointsListView.element.querySelector('.trip-events__list') || this.#pointsListView.element;
+    const container = this.#pointsListView.listContainer || this.#container;
 
     const pointPresenter = new PointPresenter({
       pointListContainer: container,
@@ -126,7 +144,15 @@ export default class PointsPresenter {
       onDataChange: this.#handlePointChange,
       onModeChange: this.#handleModeChange,
     });
+
     pointPresenter.init(point);
+
+    if (point.isNew) {
+      container.prepend(pointPresenter.pointComponent.element);
+    } else {
+      container.append(pointPresenter.pointComponent.element);
+    }
+
     this.#pointPresenter.set(point.id, pointPresenter);
   }
 
