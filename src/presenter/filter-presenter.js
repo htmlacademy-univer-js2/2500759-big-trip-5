@@ -1,66 +1,47 @@
-import { render, replace, remove } from '../framework/render.js';
-import Filter from '../view/filterView.js';
+import FilterView from '../view/filters.js';
+import { remove, render } from '../framework/render.js';
+import { UpdateType } from '../const.js';
 
 export default class FilterPresenter {
-  #filterContainer = null;
+  #eventsModel = null;
   #filterModel = null;
-  #pointsModel = null;
+  #filterContainer = null;
   #filterComponent = null;
 
-  constructor({filterContainer, filterModel, pointsModel}) {
+  constructor(filterContainer, eventsModel, filterModel) {
     this.#filterContainer = filterContainer;
+    this.#eventsModel = eventsModel;
     this.#filterModel = filterModel;
-    this.#pointsModel = pointsModel;
+
+    this.#eventsModel.addObserver(this.#handleEventsChange);
+    this.#filterModel.addObserver(this.#handleEventsChange);
+  }
+
+  get events() {
+    return this.#eventsModel.events;
   }
 
   init() {
-    const filters = this.#getFilters();
-    const prevFilterComponent = this.#filterComponent;
+    this.#renderFilters();
+  }
 
-    this.#filterComponent = new Filter({
-      filters,
-      currentFilterType: this.#filterModel.filter,
-      onFilterTypeChange: this.#handleFilterTypeChange
-    });
-
-    if (prevFilterComponent === null) {
-      render(this.#filterComponent, this.#filterContainer);
-      return;
+  #renderFilters() {
+    if (this.#filterComponent) {
+      remove(this.#filterComponent);
     }
-
-    replace(this.#filterComponent, prevFilterComponent);
-    remove(prevFilterComponent);
+    this.#filterComponent = new FilterView({
+      points: this.events,
+      currentFilter: this.#filterModel.filter,
+      onFilterChange: this.#handleFilterChange,
+    });
+    render(this.#filterComponent, this.#filterContainer);
   }
 
-  #getFilters() {
-    const points = this.#pointsModel.getPoints();
-    const now = new Date();
+  #handleFilterChange = (filterType) => {
+    this.#filterModel.setFilter(UpdateType.MAJOR, filterType);
+  };
 
-    return [
-      {
-        type: 'everything',
-        count: points.length,
-        isDisabled: points.length === 0
-      },
-      {
-        type: 'future',
-        count: points.filter((p) => new Date(p.dateFrom) > now).length,
-        isDisabled: points.filter((p) => new Date(p.dateFrom) > now).length === 0
-      },
-      {
-        type: 'present',
-        count: points.filter((point) => new Date(point.dateFrom) <= now && new Date(point.dateTo) >= now).length,
-        isDisabled: points.filter((p) => new Date(p.dateFrom) <= now && new Date(p.dateTo) >= now).length === 0
-      },
-      {
-        type: 'past',
-        count: points.filter((point) => new Date(point.dateTo) < now).length,
-        isDisabled: points.filter((p) => new Date(p.dateTo) < now).length === 0
-      }
-    ];
-  }
-
-  #handleFilterTypeChange = (filterType) => {
-    this.#filterModel.setFilter(filterType);
+  #handleEventsChange = () => {
+    this.#renderFilters();
   };
 }
