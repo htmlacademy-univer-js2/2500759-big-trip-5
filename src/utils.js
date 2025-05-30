@@ -1,81 +1,58 @@
 import dayjs from 'dayjs';
-import { SortTypes, DATE_FORMAT } from './const';
+import { FilterTypes, SortTypes } from './const.js';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import duration from 'dayjs/plugin/duration';
-import relativeTime from 'dayjs/plugin/relativeTime';
 
+const MS_IN_DAY = 86400000;
+const MS_IN_HOUR = 3600000;
+const MIN_DAYS_IN_MONTH = 29;
 
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 dayjs.extend(duration);
-dayjs.extend(relativeTime);
 
-const formateDate = (date, formatKey) => {
-  if (!date) {
-    return '';
+function formatDate(date, dateFormat) {
+  return date ? dayjs(date).format(dateFormat) : '';
+}
+
+function calculateDuration(startDate, endDate, inMilliseconds = false) {
+  const timeDuration = dayjs(endDate).diff(startDate);
+  if (inMilliseconds) {
+    return timeDuration;
   }
-  const format = DATE_FORMAT[formatKey] || formatKey;
-  return dayjs(date).format(format);
+  let timeFormat = 'DD[D] HH[H] mm[M]';
+  if (timeDuration < MS_IN_DAY) {
+    timeFormat = 'HH[H] mm[M]';
+  }
+  if (timeDuration < MS_IN_HOUR) {
+    timeFormat = 'mm[M]';
+  }
+
+  return Math.floor(dayjs.duration(timeDuration).asDays()) > MIN_DAYS_IN_MONTH ? `${Math.floor(dayjs.duration(timeDuration).asDays())}D ${dayjs.duration(timeDuration).format('HH[H] mm[M]')}` : dayjs.duration(timeDuration).format(timeFormat);
+}
+
+const filter = {
+  [FilterTypes.EVERYTHING]: (events) => events,
+  [FilterTypes.FUTURE]: (events) => events.filter((event) => dayjs().isBefore(dayjs(event.dateFrom))),
+  [FilterTypes.PRESENT]: (events) => events.filter((event) => dayjs().isSameOrAfter(dayjs(event.dateFrom)) && dayjs().isSameOrBefore(dayjs(event.dateTo))),
+  [FilterTypes.PAST]: (events) => events.filter((event) => dayjs().isAfter(dayjs(event.dateTo)))
 };
-const calculateDuration = (start, end) => {
-  if (!start || !end) {
-    return '';
-  }
 
-  const diff = dayjs(end).diff(dayjs(start));
-  const days = dayjs.duration(diff).days();
-  const hours = dayjs.duration(diff).hours();
-  const minutes = dayjs.duration(diff).minutes();
-
-  if (days > 0) {
-    return `${days}D ${hours}H ${minutes}M`;
-  }
-  if (hours > 0) {
-    return `${hours}H ${minutes}M`;
-  }
-  return `${minutes}M`;
-};
-
-const getDuration = (dateFrom, dateTo) => calculateDuration(dateFrom, dateTo);
-
-
-const updateItem = (items, update) => items.map((item) => item.id === update.id ? update : item);
-const isEscapeKey = (evt) => evt.key === 'Escape';
+function isEscapeKey(evt) {
+  return evt.key === 'Escape';
+}
 
 const sort = {
-  [SortTypes.DAY]: (points) => points.sort((a, b) => dayjs(a.dateFrom).diff(dayjs(b.dateFrom))),
-  [SortTypes.PRICE]: (points) => points.sort((a, b) => b.price - a.price),
-  [SortTypes.TIME]: (points) => points.sort((a, b) => dayjs(b.dateTo).diff(dayjs(b.dateFrom)) - dayjs(a.dateTo).diff(dayjs(a.dateFrom))
-  )
+  [SortTypes.DAY]: (points) => points.sort((first, second) => dayjs(first.dateFrom).diff(dayjs(second.dateFrom))),
+  [SortTypes.PRICE]: (points) => points.sort((first, second) => second.price - first.price),
+  [SortTypes.TIME]: (points) => points.sort((first, second) => calculateDuration(second.dateFrom, second.dateTo, true) - calculateDuration(first.dateFrom, first.dateTo, true))
 };
 
-function capitalize(string) {
-  return string[0].toUpperCase() + string.slice(1);
-}
-
-const toCamelCase = (str) => str.replace(/([-_][a-z])/ig, ($1) => $1.toUpperCase().replace('-', '').replace('_', ''));
-
-function getFormTimeString(date) {
-  return formateDate(date, 'full-date-and-time-slash');
-}
-
-const getRouteTitle = (points, destinations) => {
-  if (points.length === 0) {
-    return 'No route';
-  }
-  const destinationNames = points.map((point) => destinations.find((d) => d.id === point.destination)?.name || '');
-  if (destinationNames.length <= 3) {
-    return destinationNames.join(' — ');
-  }
-  return `${destinationNames[0]} — ... — ${destinationNames[destinationNames.length - 1]}`;
+export {
+  formatDate,
+  calculateDuration,
+  filter,
+  isEscapeKey,
+  sort
 };
-
-const getTripDates = (points) => {
-  if (points.length === 0) {
-    return 'No dates';
-  }
-  const startDate = points[0].dateFrom;
-  const endDate = points[points.length - 1].dateTo;
-  return `${formateDate(startDate, 'month-day')} — ${formateDate(endDate, 'month-day')}`;
-};
-
-const calculateTotalPrice = (points) => points.reduce((total, point) => total + point.price, 0);
-
-export {formateDate, calculateDuration, getDuration, updateItem, isEscapeKey, sort, capitalize, toCamelCase, getFormTimeString, getRouteTitle, getTripDates, calculateTotalPrice};

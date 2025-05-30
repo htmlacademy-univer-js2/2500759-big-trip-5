@@ -1,73 +1,47 @@
-import { render, replace, remove } from '../framework/render.js';
-import Filter from '../view/filterView.js';
-import { FILTER_TYPES } from '../const.js';
-//const filterContainer = document.querySelector('.trip-controls__filters');
+import FilterView from '../view/filters.js';
+import { remove, render } from '../framework/render.js';
+import { UpdateType } from '../const.js';
 
 export default class FilterPresenter {
-  #filterContainer = null;
+  #eventsModel = null;
   #filterModel = null;
-  #pointsModel = null;
+  #filterContainer = null;
   #filterComponent = null;
 
-  constructor({filterContainer, filterModel, pointsModel}) {
+  constructor(filterContainer, eventsModel, filterModel) {
     this.#filterContainer = filterContainer;
+    this.#eventsModel = eventsModel;
     this.#filterModel = filterModel;
-    this.#pointsModel = pointsModel;
+
+    this.#eventsModel.addObserver(this.#handleEventsChange);
+    this.#filterModel.addObserver(this.#handleEventsChange);
+  }
+
+  get events() {
+    return this.#eventsModel.events;
   }
 
   init() {
-    const filters = this.#getFilters();
-    const prevFilterComponent = this.#filterComponent;
+    this.#renderFilters();
+  }
 
-    this.#filterComponent = new Filter({
-      filters,
-      currentFilterType: this.#filterModel.filter,
-      onFilterTypeChange: this.#handleFilterTypeChange
+  #renderFilters() {
+    if (this.#filterComponent) {
+      remove(this.#filterComponent);
+    }
+    this.#filterComponent = new FilterView({
+      points: this.events,
+      currentFilter: this.#filterModel.filter,
+      onFilterChange: this.#handleFilterChange,
     });
-
-    if (prevFilterComponent === null) {
-      render(this.#filterComponent, this.#filterContainer);
-      return;
-    }
-
-    replace(this.#filterComponent, prevFilterComponent);
-    remove(prevFilterComponent);
+    render(this.#filterComponent, this.#filterContainer);
   }
 
-  #getFilters() {
-    const points = this.#pointsModel.getPoints();
-    const now = new Date();
+  #handleFilterChange = (filterType) => {
+    this.#filterModel.setFilter(UpdateType.MAJOR, filterType);
+  };
 
-    return [
-      {
-        type: FILTER_TYPES.EVERYTHING,
-        count: points.length,
-        isDisabled: false
-      },
-      {
-        type: FILTER_TYPES.FUTURE,
-        count: points.filter((point) => new Date(point.dateFrom) > now).length,
-        isDisabled: points.filter((point) => new Date(point.dateFrom) > now).length === 0
-      },
-      {
-        type: FILTER_TYPES.PRESENT,
-        count: points.filter((point) => new Date(point.dateFrom) <= now && new Date(point.dateTo) >= now
-        ).length,
-        isDisabled: points.filter((point) => new Date(point.dateFrom) <= now && new Date(point.dateTo) >= now
-        ).length === 0
-      },
-      {
-        type: FILTER_TYPES.PAST,
-        count: points.filter((point) => new Date(point.dateTo) < now).length,
-        isDisabled: points.filter((point) => new Date(point.dateTo) < now).length === 0
-      }
-    ];
-  }
-
-  #handleFilterTypeChange = (filterType) => {
-    if (this.#filterModel.filter === filterType) {
-      return;
-    }
-    this.#filterModel.setFilter(filterType);
+  #handleEventsChange = () => {
+    this.#renderFilters();
   };
 }
